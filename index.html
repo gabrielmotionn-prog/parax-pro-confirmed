@@ -3665,6 +3665,11 @@
       function buildCheckoutTarget(baseHref, method) {
         var safeBase = baseHref || "https://checkout.paraxpro.com";
         var safeMethod = method || "stripe";
+
+        if (safeMethod === "stripe") {
+          return "https://buy.stripe.com/8x23cxfpp8am779eOv2Ji00";
+        }
+
         try {
           var url = new URL(safeBase, window.location.origin);
           url.searchParams.set("method", safeMethod);
