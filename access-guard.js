@@ -2,6 +2,7 @@
   var USERS_KEY = "parax_pro_users_v1";
   var SESSION_KEY = "parax_pro_session_v1";
   var PURCHASE_OWNER_KEY = "parax_pro_purchase_owner_v1";
+  var ORDER_ACCESS_KEY = "parax_pro_order_access_v1";
   var HOME_URL = "index.html";
 
   function normalizeEmail(value) {
@@ -62,7 +63,7 @@
     style.id = "guardStyles";
     style.textContent = [
       "body.guard-pending .wrap { visibility: hidden; }",
-      ".guard-overlay { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 16px; background: rgba(2,1,7,0.78); backdrop-filter: blur(6px); }",
+      ".guard-overlay { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 16px; background: rgba(2,1,7,0.8); backdrop-filter: blur(6px); }",
       ".guard-card { width: min(460px, 100%); border: 1px solid rgba(124,58,237,0.55); border-radius: 18px; background: linear-gradient(180deg, rgba(14,9,26,0.98), rgba(8,5,16,0.98)); box-shadow: 0 30px 80px rgba(3,2,9,0.75); padding: 18px; color: #f7f5ff; font-family: 'Plus Jakarta Sans', sans-serif; }",
       ".guard-tag { margin: 0 0 10px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c4b5fd; }",
       ".guard-title { margin: 0 0 8px; font-family: 'Space Grotesk', sans-serif; font-size: 1.55rem; line-height: 1.1; letter-spacing: -0.02em; }",
@@ -82,7 +83,65 @@
     document.head.appendChild(style);
   }
 
-  function showLoginGate(ownerEmail) {
+  function readStoredOrderAccess() {
+    try {
+      var raw = localStorage.getItem(ORDER_ACCESS_KEY);
+      var data = JSON.parse(raw || "{}");
+      if (!data || typeof data !== "object") return null;
+      if (!data.sessionId || !data.orderToken || !data.purchaserEmail) return null;
+      return {
+        sessionId: String(data.sessionId),
+        orderToken: String(data.orderToken),
+        purchaserEmail: normalizeEmail(data.purchaserEmail),
+        verifiedAt: data.verifiedAt || ""
+      };
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function saveStoredOrderAccess(access) {
+    localStorage.setItem(ORDER_ACCESS_KEY, JSON.stringify(access));
+  }
+
+  function getQueryOrderAccess() {
+    var params = new URLSearchParams(window.location.search);
+    var sessionId = String(params.get("session_id") || "").trim();
+    var orderToken = String(params.get("order_token") || "").trim();
+    if (!sessionId || !orderToken) return null;
+    return {
+      sessionId: sessionId,
+      orderToken: orderToken
+    };
+  }
+
+  function clearSensitiveQueryParams() {
+    if (!window.history || typeof window.history.replaceState !== "function") return;
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  async function verifyOrderAccess(sessionId, orderToken) {
+    var response = await fetch("/api/verify-order-access", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: sessionId,
+        orderToken: orderToken
+      })
+    });
+
+    var result = await response.json().catch(function () {
+      return {};
+    });
+
+    if (!response.ok || !result || !result.ok || !result.purchaserEmail) {
+      throw new Error(result.error || "Unable to verify your access.");
+    }
+
+    return normalizeEmail(result.purchaserEmail);
+  }
+
+  function showLoginGate(expectedEmail) {
     ensureStyles();
 
     var overlay = document.createElement("div");
@@ -128,17 +187,16 @@
 
       var email = normalizeEmail(emailInput.value);
       var password = String(passwordInput.value || "");
-
       if (!email || !password) return;
 
-      if (email !== ownerEmail) {
+      if (email !== expectedEmail) {
         redirectHome();
         return;
       }
 
       var user = findUserByEmail(email);
       if (!user) {
-        setError("Account not found.");
+        setError("Account not found in this browser.");
         return;
       }
 
@@ -161,15 +219,42 @@
     });
   }
 
-  function init() {
-    var ownerEmail = normalizeEmail(localStorage.getItem(PURCHASE_OWNER_KEY));
-    var sessionEmail = normalizeEmail(localStorage.getItem(SESSION_KEY));
+  async function init() {
+    var queryAccess = getQueryOrderAccess();
+    var orderAccess = null;
+    var ownerEmail = "";
+
+    try {
+      if (queryAccess) {
+        ownerEmail = await verifyOrderAccess(queryAccess.sessionId, queryAccess.orderToken);
+        orderAccess = {
+          sessionId: queryAccess.sessionId,
+          orderToken: queryAccess.orderToken,
+          purchaserEmail: ownerEmail,
+          verifiedAt: new Date().toISOString()
+        };
+        saveStoredOrderAccess(orderAccess);
+        localStorage.setItem(PURCHASE_OWNER_KEY, ownerEmail);
+        clearSensitiveQueryParams();
+      } else {
+        orderAccess = readStoredOrderAccess();
+        if (!orderAccess) {
+          redirectHome();
+          return;
+        }
+        ownerEmail = normalizeEmail(orderAccess.purchaserEmail);
+      }
+    } catch (error) {
+      redirectHome();
+      return;
+    }
 
     if (!ownerEmail) {
       redirectHome();
       return;
     }
 
+    var sessionEmail = normalizeEmail(localStorage.getItem(SESSION_KEY));
     if (sessionEmail) {
       if (sessionEmail === ownerEmail) {
         revealProtectedContent();
