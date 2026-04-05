@@ -1,0 +1,3921 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parax Pro | Depth and Cinematic Motion for After Effects</title>
+  <meta name="description" content="Parax Pro transforma cenas estaticas em composicoes com profundidade real e movimento cinematografico no After Effects.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #06040f;
+      --bg-soft: #0d0818;
+      --surface: #120b22;
+      --line: rgba(168, 139, 250, 0.28);
+      --line-soft: rgba(124, 58, 237, 0.2);
+      --text: #f7f5ff;
+      --muted: #a9a2bf;
+      --purple: #a78bfa;
+      --violet: #7c3aed;
+      --blue: #3b82f6;
+      --green: #22c55e;
+      --danger: #fb7185;
+      --radius-lg: 26px;
+      --radius-md: 18px;
+      --shadow-lg: 0 30px 110px rgba(8, 4, 20, 0.72);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Plus Jakarta Sans", sans-serif;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      background-image:
+        radial-gradient(circle at 12% 10%, rgba(124, 58, 237, 0.35), transparent 30%),
+        radial-gradient(circle at 88% 8%, rgba(59, 130, 246, 0.22), transparent 28%),
+        radial-gradient(circle at 50% 65%, rgba(124, 58, 237, 0.16), transparent 38%),
+        linear-gradient(180deg, #05030d 0%, #090513 100%);
+    }
+
+    .fx-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+      background-size: 42px 42px;
+      pointer-events: none;
+      opacity: 0.5;
+      z-index: 0;
+    }
+
+    .fx-blob {
+      position: fixed;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+    }
+
+    .fx-blob.one {
+      top: -120px;
+      left: -130px;
+      background: #7c3aed;
+    }
+
+    .fx-blob.two {
+      top: 10%;
+      right: -180px;
+      background: #2563eb;
+    }
+
+    .fx-blob.three {
+      bottom: -210px;
+      left: 36%;
+      background: #9333ea;
+      opacity: 0.28;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      width: min(1160px, 92%);
+      margin: 0 auto;
+    }
+
+    section {
+      margin-bottom: 26px;
+    }
+
+    .tag {
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--purple);
+      font-weight: 700;
+      margin: 0 0 12px;
+    }
+
+    .panel {
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, rgba(13, 8, 24, 0.88), rgba(8, 5, 15, 0.96));
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      pointer-events: none;
+      background: linear-gradient(140deg, rgba(167, 139, 250, 0.2), transparent 36%, rgba(59, 130, 246, 0.2));
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      -webkit-mask-composite: xor;
+      padding: 1px;
+      opacity: 0.6;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 22px 0 10px;
+    }
+
+    .brand img {
+      width: 170px;
+      height: auto;
+      filter: drop-shadow(0 10px 26px rgba(38, 10, 78, 0.62));
+    }
+
+    .top-meta {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .top-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .meta-chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 0.75rem;
+      color: #cbc4df;
+      background: rgba(167, 139, 250, 0.1);
+      padding: 8px 12px;
+      white-space: nowrap;
+    }
+
+    .auth-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-auth {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 13px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: #ddd6fe;
+      background: rgba(167, 139, 250, 0.08);
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .btn-auth:hover {
+      border-color: rgba(167, 139, 250, 0.72);
+      background: rgba(167, 139, 250, 0.18);
+    }
+
+    .btn-auth.primary {
+      color: #fff;
+      border-color: rgba(167, 139, 250, 0.75);
+      background: linear-gradient(90deg, rgba(109, 40, 217, 0.9), rgba(37, 99, 235, 0.9));
+    }
+
+    .btn-auth.primary:hover {
+      filter: brightness(1.08);
+    }
+
+    .user-chip {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(167, 139, 250, 0.55);
+      background: rgba(109, 40, 217, 0.17);
+      border-radius: 999px;
+      padding: 6px 8px 6px 12px;
+      color: #ece9ff;
+      font-size: 0.74rem;
+      font-weight: 700;
+      max-width: clamp(170px, 23vw, 290px);
+      min-width: 0;
+      flex: 0 1 290px;
+    }
+
+    .user-chip.show {
+      display: inline-flex;
+    }
+
+    .user-chip span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .user-chip button {
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 999px;
+      background: rgba(10, 6, 20, 0.45);
+      color: #f8fafc;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      flex: 0 0 auto;
+    }
+
+    .user-chip button:hover {
+      background: rgba(10, 6, 20, 0.75);
+    }
+
+    .hero {
+      padding: 52px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .hero-start {
+      position: relative;
+      min-height: 82vh;
+      border-radius: 30px;
+      border: 1px solid rgba(124, 58, 237, 0.35);
+      overflow: hidden;
+      padding: 34px 30px 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background:
+        radial-gradient(circle at 25% 35%, rgba(168, 85, 247, 0.22), transparent 36%),
+        radial-gradient(circle at 74% 33%, rgba(59, 130, 246, 0.2), transparent 34%),
+        linear-gradient(180deg, rgba(13, 8, 24, 0.8), rgba(8, 5, 16, 0.94));
+      box-shadow: 0 34px 90px rgba(5, 2, 12, 0.72);
+      margin-bottom: 26px;
+      isolation: isolate;
+    }
+
+    .hero-start::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 62px 62px;
+      opacity: 0.2;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .hero-start::after {
+      content: "";
+      position: absolute;
+      width: min(950px, 92%);
+      height: 320px;
+      left: 50%;
+      top: 25%;
+      transform: translateX(-50%);
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.26), rgba(96, 165, 250, 0.12) 48%, transparent 75%);
+      filter: blur(36px);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .hero-nav {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      z-index: 3;
+    }
+
+    .hero-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #f6f4ff;
+      text-decoration: none;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1.56rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    .hero-logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background:
+        radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.8) 10%, transparent 42%),
+        linear-gradient(145deg, #7c3aed, #2563eb);
+      box-shadow: 0 0 24px rgba(124, 58, 237, 0.65);
+    }
+
+    .hero-logo-text em {
+      font-style: normal;
+      color: #c4b5fd;
+    }
+
+    .hero-logo-text {
+      display: inline-block;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .hero-menu {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: clamp(12px, 1.9vw, 26px);
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .hero-menu a {
+      text-decoration: none;
+      color: #ada4c8;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .hero-menu a:hover {
+      color: #f5f3ff;
+    }
+
+    .hero-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+      min-width: 0;
+    }
+
+    .lang-dropdown {
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .lang-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #e0d7fb;
+      background: rgba(109, 40, 217, 0.14);
+      cursor: pointer;
+      transition: 0.2s ease;
+      white-space: nowrap;
+      min-width: 152px;
+      text-align: left;
+      height: 42px;
+    }
+
+    .lang-pill:hover {
+      background: rgba(109, 40, 217, 0.22);
+    }
+
+    .lang-pill:focus-visible {
+      outline: none;
+      border-color: rgba(167, 139, 250, 0.9);
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+    }
+
+    .lang-label {
+      flex: 1 1 auto;
+    }
+
+    .lang-caret {
+      margin-left: auto;
+      font-size: 0.7rem;
+      color: #c7b8ee;
+      transform: translateY(1px);
+    }
+
+    .lang-dropdown.open .lang-caret {
+      transform: rotate(180deg) translateY(-1px);
+    }
+
+    .lang-flag {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      object-fit: cover;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+      flex: 0 0 auto;
+    }
+
+    .lang-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 100%;
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(167, 139, 250, 0.5);
+      background: rgba(17, 10, 34, 0.96);
+      box-shadow: 0 18px 34px rgba(4, 2, 11, 0.7);
+      backdrop-filter: blur(10px);
+      display: none;
+      z-index: 30;
+    }
+
+    .lang-dropdown.open .lang-menu {
+      display: grid;
+      gap: 4px;
+    }
+
+    .lang-option {
+      border: none;
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: transparent;
+      color: #d6cdee;
+      font-size: 0.86rem;
+      font-weight: 600;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-align: left;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .lang-option:hover {
+      background: rgba(124, 58, 237, 0.24);
+      color: #ffffff;
+    }
+
+    .lang-option.active {
+      background: linear-gradient(90deg, rgba(124, 58, 237, 0.4), rgba(37, 99, 235, 0.34));
+      color: #ffffff;
+    }
+
+    .hero-buy-top {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border: 1px solid rgba(167, 139, 250, 0.72);
+      border-radius: 999px;
+      padding: 9px 20px;
+      height: 42px;
+      color: #fff;
+      font-size: 0.93rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #6d28d9, #2563eb);
+      box-shadow: 0 10px 24px rgba(109, 40, 217, 0.45);
+      white-space: nowrap;
+      transition: 0.22s ease;
+    }
+
+    .hero-buy-top:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.07);
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 16px;
+      color: #d8cff5;
+      background: rgba(109, 40, 217, 0.18);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 70px 0 20px;
+    }
+
+    .hero-pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #c084fc;
+      box-shadow: 0 0 12px rgba(192, 132, 252, 0.8);
+    }
+
+    .hero-title {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(2.4rem, 7vw, 5.8rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      max-width: 18ch;
+      color: #f7f4ff;
+      text-wrap: balance;
+    }
+
+    .hero-title .t-purple {
+      background: linear-gradient(90deg, #d8b4fe, #a78bfa);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-title .t-blue {
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-lead {
+      margin: 22px auto 0;
+      max-width: 44ch;
+      color: #bcb5d0;
+      font-size: clamp(1.02rem, 2.1vw, 1.18rem);
+      line-height: 1.55;
+    }
+
+    .hero-cta-row {
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .hero-demo-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #ddd6fe;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 10px 6px;
+      transition: 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .hero-demo-link .hero-demo-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(167, 139, 250, 0.55);
+      display: grid;
+      place-items: center;
+      background: rgba(167, 139, 250, 0.08);
+      font-size: 0.87rem;
+      flex: 0 0 auto;
+    }
+
+    .hero-demo-link .hero-demo-text {
+      display: inline-block;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .hero-demo-link:hover {
+      color: #ffffff;
+    }
+
+    .hero-video-center {
+      width: min(1020px, 100%);
+      margin-top: 78px;
+      border: 1px solid var(--line-soft);
+      border-radius: 24px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    .intro-video {
+      padding: 30px;
+      position: relative;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(124, 58, 237, 0.16), transparent 38%),
+        radial-gradient(circle at 82% 8%, rgba(37, 99, 235, 0.12), transparent 34%),
+        linear-gradient(180deg, rgba(14, 9, 28, 0.95), rgba(9, 6, 18, 0.96));
+    }
+
+    .intro-video::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 54px 54px;
+      opacity: 0.25;
+    }
+
+    .intro-video-head {
+      text-align: center;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .intro-video-head h2 {
+      font-size: clamp(1.75rem, 4vw, 3rem);
+      margin-bottom: 8px;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .intro-video-head p {
+      margin: 0 auto;
+      color: var(--muted);
+      line-height: 1.58;
+      max-width: 48ch;
+      font-size: 1.02rem;
+    }
+
+    .intro-video .tag {
+      margin-bottom: 10px;
+    }
+
+    .video-stage-top {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 24px 70px rgba(4, 2, 11, 0.72);
+      aspect-ratio: 16 / 9;
+      position: relative;
+      isolation: isolate;
+      z-index: 1;
+    }
+
+    .video-stage-top::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      padding: 1px;
+      background: linear-gradient(120deg, rgba(167, 139, 250, 0.42), rgba(59, 130, 246, 0.35), rgba(167, 139, 250, 0.28));
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      -webkit-mask-composite: xor;
+      z-index: 2;
+    }
+
+    .video-stage-top::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        inset 0 -90px 120px rgba(3, 2, 8, 0.48);
+      z-index: 1;
+    }
+
+    .video-placeholder-image {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      background: #000;
+      transform: scale(1.005);
+      transition: transform 0.45s ease;
+    }
+
+    .video-stage-top:hover .video-placeholder-image {
+      transform: scale(1.02);
+    }
+
+    .video-stage-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 40%, rgba(37, 99, 235, 0.18), transparent 40%),
+        linear-gradient(180deg, rgba(7, 3, 16, 0.28), rgba(5, 3, 10, 0.64));
+      pointer-events: none;
+      z-index: 1;
+      transition: opacity 0.28s ease;
+    }
+
+    .video-coming-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 2;
+      border: 1px solid rgba(167, 139, 250, 0.65);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.74rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: #efe9ff;
+      background: rgba(109, 40, 217, 0.36);
+      backdrop-filter: blur(4px);
+    }
+
+    .video-play-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+      width: 94px;
+      height: 94px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      background:
+        radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.18), transparent 44%),
+        linear-gradient(145deg, rgba(124, 58, 237, 0.84), rgba(37, 99, 235, 0.84));
+      display: grid;
+      place-items: center;
+      box-shadow:
+        0 22px 44px rgba(10, 5, 24, 0.72),
+        0 0 0 14px rgba(167, 139, 250, 0.08);
+      cursor: pointer;
+      transition: transform 0.22s ease, filter 0.22s ease, opacity 0.28s ease;
+      outline: none;
+    }
+
+    .video-play-center:hover {
+      transform: translate(-50%, -50%) scale(1.05);
+      filter: brightness(1.07);
+    }
+
+    .video-play-center:focus-visible {
+      box-shadow:
+        0 22px 44px rgba(10, 5, 24, 0.72),
+        0 0 0 14px rgba(167, 139, 250, 0.08),
+        0 0 0 4px rgba(191, 164, 255, 0.52);
+    }
+
+    .video-stage-top.is-playing .video-play-center {
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(0.94);
+    }
+
+    .video-stage-top.is-playing .video-stage-overlay {
+      opacity: 0;
+    }
+
+    .video-play-center::before {
+      content: "";
+      width: 0;
+      height: 0;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      border-left: 18px solid #ffffff;
+      margin-left: 4px;
+    }
+
+    .video-custom-controls {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 12px;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(124, 58, 237, 0.56);
+      background: linear-gradient(180deg, rgba(14, 8, 30, 0.7), rgba(8, 4, 18, 0.88));
+      box-shadow: 0 12px 30px rgba(3, 2, 9, 0.58);
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.24s ease, transform 0.24s ease;
+    }
+
+    .video-stage-top.controls-active .video-custom-controls {
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+    }
+
+    .video-stage-top.controls-active:hover .video-custom-controls,
+    .video-stage-top.controls-active .video-custom-controls:focus-within,
+    .video-stage-top.controls-active .video-progress.is-dragging {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .video-mini-btn {
+      border: 1px solid rgba(167, 139, 250, 0.56);
+      border-radius: 999px;
+      background: rgba(124, 58, 237, 0.18);
+      color: #f2ecff;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1;
+      padding: 8px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: 0.2s ease;
+    }
+
+    .video-mini-btn:hover {
+      background: rgba(124, 58, 237, 0.32);
+      border-color: rgba(167, 139, 250, 0.75);
+    }
+
+    .video-time {
+      margin: 0;
+      min-width: 78px;
+      font-size: 0.79rem;
+      font-weight: 700;
+      color: #dad0fa;
+      letter-spacing: 0.01em;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .video-progress {
+      flex: 1 1 auto;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.22);
+      overflow: visible;
+      cursor: pointer;
+      position: relative;
+      outline: none;
+    }
+
+    .video-progress:focus-visible {
+      box-shadow: 0 0 0 2px rgba(196, 181, 253, 0.65);
+    }
+
+    .video-progress-fill {
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #7c3aed 0%, #8b5cf6 42%, #2563eb 100%);
+      box-shadow: 0 0 14px rgba(124, 58, 237, 0.9), 0 0 22px rgba(37, 99, 235, 0.5);
+      transform-origin: left center;
+      transform: scaleX(0);
+      will-change: transform;
+      transition: transform 0.05s linear;
+      pointer-events: none;
+    }
+
+    .video-progress-thumb {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #7c3aed;
+      box-shadow: 0 0 10px rgba(124, 58, 237, 0.75), 0 0 16px rgba(37, 99, 235, 0.5);
+      transform: translate(-50%, -50%) scale(0.72);
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .video-stage-top:hover .video-progress-thumb,
+    .video-progress:focus-visible .video-progress-thumb,
+    .video-progress.is-dragging .video-progress-thumb {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .video-preview-caption {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      z-index: 2;
+      color: #e5ddff;
+      font-size: 0.93rem;
+      font-weight: 600;
+      text-align: center;
+      text-shadow: 0 6px 18px rgba(0, 0, 0, 0.62);
+    }
+
+    .video-hint {
+      margin: 12px 0 2px;
+      text-align: center;
+      color: #a89ec5;
+      font-size: 0.84rem;
+      line-height: 1.5;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: rgba(167, 139, 250, 0.12);
+      color: #d8cdf8;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      letter-spacing: -0.03em;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 6vw, 4.3rem);
+      line-height: 0.94;
+      max-width: 12ch;
+      margin-bottom: 16px;
+    }
+
+    .text-gradient {
+      background: linear-gradient(94deg, #d8c9ff 0%, #a78bfa 33%, #7c3aed 58%, #60a5fa 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      margin: 0 0 22px;
+      color: var(--muted);
+      max-width: 54ch;
+      line-height: 1.62;
+      font-size: 1.05rem;
+    }
+
+    .hero-cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      text-decoration: none;
+      border-radius: 16px;
+      padding: 14px 24px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 0.94rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      transition: 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid transparent;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .btn-main {
+      color: #fff;
+      box-shadow: 0 18px 40px rgba(109, 40, 217, 0.5);
+      background: linear-gradient(90deg, #6d28d9 0%, #7c3aed 45%, #2563eb 100%);
+    }
+
+    .btn-main::before {
+      content: "";
+      position: absolute;
+      top: -6px;
+      left: -22px;
+      width: 42px;
+      height: calc(100% + 12px);
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(14deg) translateX(-40px);
+      transition: transform 0.55s ease;
+      z-index: -1;
+    }
+
+    .btn-main:hover {
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 24px 45px rgba(109, 40, 217, 0.64);
+    }
+
+    .btn-main:hover::before {
+      transform: rotate(14deg) translateX(320px);
+    }
+
+    .btn-soft {
+      color: #ddd8f2;
+      border-color: var(--line);
+      background: rgba(167, 139, 250, 0.08);
+    }
+
+    .btn-soft:hover {
+      border-color: rgba(167, 139, 250, 0.7);
+      background: rgba(167, 139, 250, 0.18);
+    }
+
+    .hero-proof {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(18, 11, 34, 0.95), rgba(10, 6, 19, 0.95));
+      padding: 18px;
+    }
+
+    .proof-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .proof-item {
+      border: 1px solid var(--line-soft);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(124, 58, 237, 0.08);
+    }
+
+    .proof-item strong {
+      display: block;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1rem;
+      margin-bottom: 4px;
+      color: #efebff;
+    }
+
+    .proof-item span {
+      color: #b8afce;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      padding: 30px;
+    }
+
+    .card h2 {
+      font-size: clamp(1.45rem, 3.2vw, 2.3rem);
+      margin-bottom: 12px;
+      line-height: 1.08;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.63;
+    }
+
+    .signal-list,
+    .benefit-list {
+      margin: 16px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .signal-list li,
+    .benefit-list li {
+      border: 1px solid var(--line-soft);
+      border-radius: 13px;
+      background: rgba(12, 8, 22, 0.8);
+      padding: 12px 14px;
+      color: #d8d1e9;
+      line-height: 1.5;
+      position: relative;
+    }
+
+    .signal-list.pain li {
+      padding-left: 40px;
+    }
+
+    .signal-list.pain li::before {
+      content: "!";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #ffe5eb;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: linear-gradient(180deg, #fb7185, #be123c);
+      box-shadow: 0 0 0 2px rgba(251, 113, 133, 0.2);
+    }
+
+    .signal-list.solution li {
+      padding-left: 40px;
+    }
+
+    .signal-list.solution li::before {
+      content: "";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+      width: 12px;
+      height: 12px;
+      border-right: 2px solid #86efac;
+      border-bottom: 2px solid #86efac;
+    }
+
+    .benefits-wrap {
+      padding: 30px;
+    }
+
+    .benefits-wrap h2 {
+      font-size: clamp(1.45rem, 3.2vw, 2.2rem);
+      margin-bottom: 12px;
+    }
+
+    .benefits-wrap p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .benefit-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .benefit-list li {
+      padding: 14px 14px 14px 44px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      background: linear-gradient(180deg, rgba(24, 13, 44, 0.88), rgba(10, 6, 18, 0.88));
+    }
+
+    .benefit-list li::before {
+      content: "";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 50%, #05030a 28%, transparent 28%),
+        radial-gradient(circle at 60% 35%, #d9ccff 14%, #7c3aed 58%, #2563eb 100%);
+      box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.28);
+    }
+
+    .showcase {
+      padding: 30px;
+    }
+
+    .showcase-head {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .showcase-head h2 {
+      font-size: clamp(1.5rem, 3.5vw, 2.45rem);
+      margin-bottom: 8px;
+    }
+
+    .showcase-head p {
+      margin: 0 auto;
+      color: var(--muted);
+      max-width: 58ch;
+      line-height: 1.6;
+    }
+
+    .showcase-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .showcase-row {
+      border: 1px solid var(--line-soft);
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(16, 10, 30, 0.9), rgba(9, 6, 18, 0.92));
+      display: grid;
+      grid-template-columns: 1.05fr 1.15fr;
+      gap: 16px;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .showcase-row::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 14% 12%, rgba(124, 58, 237, 0.18), transparent 45%),
+        radial-gradient(circle at 84% 88%, rgba(37, 99, 235, 0.16), transparent 42%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .showcase-row.reverse {
+      grid-template-columns: 1.15fr 1.05fr;
+    }
+
+    .showcase-row.reverse .showcase-copy {
+      order: 2;
+    }
+
+    .showcase-row.reverse .showcase-visual {
+      order: 1;
+    }
+
+    .showcase-copy h3 {
+      margin: 0 0 8px;
+      font-size: clamp(1.2rem, 2.8vw, 1.75rem);
+      line-height: 1.12;
+    }
+
+    .showcase-copy p {
+      margin: 0;
+      color: #b9b1d0;
+      line-height: 1.62;
+      max-width: 42ch;
+      font-size: 0.98rem;
+    }
+
+    .showcase-visual {
+      position: relative;
+      border: 1px solid rgba(167, 139, 250, 0.35);
+      border-radius: 16px;
+      aspect-ratio: 16 / 10;
+      background:
+        radial-gradient(circle at 24% 20%, rgba(124, 58, 237, 0.34), transparent 40%),
+        radial-gradient(circle at 80% 72%, rgba(37, 99, 235, 0.3), transparent 42%),
+        linear-gradient(180deg, rgba(15, 10, 28, 0.95), rgba(10, 6, 20, 0.96));
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 16px 34px rgba(2, 1, 7, 0.52);
+      overflow: hidden;
+    }
+
+    .showcase-window {
+      position: absolute;
+      inset: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(180deg, rgba(49, 56, 86, 0.48), rgba(20, 22, 42, 0.78));
+      overflow: hidden;
+    }
+
+    .showcase-topbar {
+      height: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 10px;
+      background: rgba(17, 20, 39, 0.6);
+    }
+
+    .showcase-topbar span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #7c3aed;
+    }
+
+    .showcase-topbar span:nth-child(2) {
+      background: #60a5fa;
+    }
+
+    .showcase-topbar span:nth-child(3) {
+      background: #34d399;
+    }
+
+    .showcase-body {
+      height: calc(100% - 24px);
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .scene-stack {
+      position: relative;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: linear-gradient(180deg, rgba(14, 14, 31, 0.92), rgba(11, 10, 22, 0.92));
+      overflow: hidden;
+    }
+
+    .scene-stack i {
+      position: absolute;
+      left: 10%;
+      height: 13%;
+      border-radius: 4px;
+      opacity: 0.9;
+    }
+
+    .scene-stack i:nth-child(1) {
+      top: 18%;
+      width: 72%;
+      background: linear-gradient(90deg, rgba(96, 165, 250, 0.95), rgba(59, 130, 246, 0.58));
+    }
+
+    .scene-stack i:nth-child(2) {
+      top: 34%;
+      width: 62%;
+      background: linear-gradient(90deg, rgba(139, 92, 246, 0.95), rgba(109, 40, 217, 0.62));
+    }
+
+    .scene-stack i:nth-child(3) {
+      top: 50%;
+      width: 52%;
+      background: linear-gradient(90deg, rgba(34, 211, 238, 0.92), rgba(59, 130, 246, 0.58));
+    }
+
+    .scene-stack i:nth-child(4) {
+      top: 66%;
+      width: 42%;
+      background: linear-gradient(90deg, rgba(251, 191, 36, 0.92), rgba(249, 115, 22, 0.58));
+    }
+
+    .preview-box {
+      position: relative;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background:
+        linear-gradient(160deg, rgba(56, 189, 248, 0.42), rgba(14, 116, 144, 0.25) 40%, transparent 70%),
+        linear-gradient(180deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95));
+      overflow: hidden;
+    }
+
+    .preview-box::before {
+      content: "";
+      position: absolute;
+      inset: 12% 10%;
+      border-radius: 6px;
+      background: linear-gradient(180deg, rgba(148, 163, 184, 0.22), rgba(30, 41, 59, 0.15));
+      border: 1px dashed rgba(226, 232, 240, 0.35);
+    }
+
+    .timeline-mini {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(241, 245, 249, 0.2);
+      overflow: hidden;
+    }
+
+    .timeline-mini::before {
+      content: "";
+      display: block;
+      width: 56%;
+      height: 100%;
+      background: linear-gradient(90deg, #7c3aed, #2563eb);
+      box-shadow: 0 0 12px rgba(124, 58, 237, 0.7);
+    }
+
+    .visual-two .scene-stack i:nth-child(1) {
+      width: 68%;
+      left: 14%;
+      transform: rotate(-8deg);
+    }
+
+    .visual-two .scene-stack i:nth-child(2) {
+      width: 58%;
+      left: 18%;
+      transform: rotate(-5deg);
+    }
+
+    .visual-two .scene-stack i:nth-child(3) {
+      width: 48%;
+      left: 22%;
+      transform: rotate(-2deg);
+    }
+
+    .visual-two .scene-stack i:nth-child(4) {
+      width: 38%;
+      left: 26%;
+    }
+
+    .visual-two .preview-box::after {
+      content: "";
+      position: absolute;
+      inset: 24% 26%;
+      border-radius: 4px;
+      border: 2px solid rgba(250, 204, 21, 0.75);
+      box-shadow: 0 0 12px rgba(250, 204, 21, 0.42);
+    }
+
+    .visual-three .showcase-body {
+      grid-template-columns: 1.25fr 0.75fr;
+    }
+
+    .tool-map {
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: linear-gradient(180deg, rgba(14, 14, 31, 0.92), rgba(11, 10, 22, 0.92));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tool-map i {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      height: 2px;
+      background: rgba(167, 139, 250, 0.85);
+    }
+
+    .tool-map i:nth-child(1) {
+      top: 22%;
+    }
+
+    .tool-map i:nth-child(2) {
+      top: 38%;
+    }
+
+    .tool-map i:nth-child(3) {
+      top: 54%;
+    }
+
+    .tool-map i:nth-child(4) {
+      top: 70%;
+    }
+
+    .tool-map i:nth-child(5) {
+      top: 86%;
+    }
+
+    .tool-panel {
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: linear-gradient(180deg, rgba(32, 25, 51, 0.94), rgba(16, 10, 30, 0.95));
+      padding: 8px;
+      display: grid;
+      gap: 6px;
+      align-content: start;
+    }
+
+    .tool-panel span {
+      height: 20px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(15, 10, 26, 0.7);
+    }
+
+    .tool-panel span:first-child {
+      background: linear-gradient(90deg, rgba(124, 58, 237, 0.9), rgba(37, 99, 235, 0.9));
+      border-color: rgba(167, 139, 250, 0.75);
+    }
+
+    .showcase-chip {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      border: 1px solid rgba(167, 139, 250, 0.62);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: #f4f0ff;
+      background: rgba(76, 29, 149, 0.58);
+      backdrop-filter: blur(4px);
+    }
+
+    .visual-two .showcase-chip {
+      right: auto;
+      left: 10px;
+      background: rgba(37, 99, 235, 0.48);
+    }
+
+    .visual-three .showcase-chip {
+      background: rgba(14, 165, 233, 0.36);
+    }
+
+    .demo {
+      padding: 26px;
+    }
+
+    .demo-head {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .demo-head h2 {
+      font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+      margin-bottom: 8px;
+    }
+
+    .demo-head p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .ba-shell {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #05050a;
+      box-shadow: 0 26px 70px rgba(9, 4, 21, 0.75);
+      user-select: none;
+    }
+
+    .ba-base,
+    .ba-overlay img {
+      width: 100%;
+      display: block;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+
+    .ba-overlay {
+      position: absolute;
+      inset: 0;
+      width: 50%;
+      overflow: hidden;
+    }
+
+    .ba-overlay img {
+      filter: grayscale(1) brightness(0.58);
+      width: 100%;
+      height: 100%;
+    }
+
+    .ba-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.84);
+      transform: translateX(-50%);
+    }
+
+    .ba-handle::after {
+      content: "< >";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: #5b21b6;
+      background: #fff;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .ba-label {
+      position: absolute;
+      bottom: 14px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-radius: 999px;
+      padding: 7px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(4px);
+    }
+
+    .ba-label.before {
+      left: 14px;
+      color: #ddd6fe;
+      background: rgba(31, 41, 55, 0.65);
+    }
+
+    .ba-label.after {
+      right: 14px;
+      color: #f8f7ff;
+      background: rgba(124, 58, 237, 0.8);
+    }
+
+    .ba-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: ew-resize;
+    }
+
+    .compare {
+      padding: 28px;
+    }
+
+    .compare h2 {
+      font-size: clamp(1.45rem, 3.2vw, 2.2rem);
+      margin-bottom: 12px;
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .compare-card {
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      background: rgba(13, 8, 24, 0.86);
+      padding: 20px;
+    }
+
+    .compare-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .compare-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #c8c0de;
+      line-height: 1.62;
+    }
+
+    .compare-card.bad h3 {
+      color: #fda4af;
+    }
+
+    .compare-card.good h3 {
+      color: #86efac;
+    }
+
+    .final-cta {
+      padding: 34px 30px;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 14% 16%, rgba(124, 58, 237, 0.24), transparent 44%),
+        radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.22), transparent 42%),
+        linear-gradient(180deg, rgba(11, 7, 22, 0.98), rgba(7, 4, 14, 0.98));
+    }
+
+    .final-cta::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 58px 58px;
+      opacity: 0.16;
+    }
+
+    .offer-badge {
+      margin: 0 auto 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(167, 139, 250, 0.5);
+      border-radius: 999px;
+      padding: 9px 15px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #ece5ff;
+      background: rgba(109, 40, 217, 0.2);
+      position: relative;
+      z-index: 1;
+    }
+
+    .offer-badge::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f59e0b;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+    }
+
+    .offer-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) 1px minmax(0, 1.1fr);
+      gap: 18px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .offer-price {
+      color: #f8f7ff;
+    }
+
+    .offer-amount {
+      margin: 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 0.9;
+    }
+
+    .offer-currency {
+      font-size: clamp(1.35rem, 2.8vw, 1.9rem);
+      color: #a894dc;
+      transform: translateY(16px);
+      font-weight: 500;
+    }
+
+    .offer-value {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(4.1rem, 10vw, 5.8rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .offer-sub {
+      margin: 10px 0 4px;
+      color: #a89ec5;
+      font-size: 1.04rem;
+      line-height: 1.45;
+    }
+
+    .offer-old {
+      margin: 0;
+      color: #777095;
+      text-decoration: line-through;
+      font-size: 0.95rem;
+    }
+
+    .offer-save {
+      margin: 12px 0 0;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(16, 185, 129, 0.6);
+      border-radius: 999px;
+      padding: 6px 11px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #7af0c0;
+      background: rgba(6, 78, 59, 0.34);
+    }
+
+    .offer-divider {
+      width: 1px;
+      height: 130px;
+      background: linear-gradient(180deg, rgba(167, 139, 250, 0), rgba(167, 139, 250, 0.6), rgba(167, 139, 250, 0));
+      justify-self: center;
+    }
+
+    .offer-features {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .offer-features li {
+      position: relative;
+      padding-left: 34px;
+      color: #ece9ff;
+      font-size: 1rem;
+      line-height: 1.45;
+    }
+
+    .offer-features li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid rgba(167, 139, 250, 0.6);
+      background: rgba(109, 40, 217, 0.34);
+      color: #ddd6fe;
+      display: grid;
+      place-items: center;
+      font-size: 0.74rem;
+      font-weight: 800;
+    }
+
+    .offer-action {
+      margin-top: 22px;
+      display: flex;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .offer-action .btn-main {
+      font-size: 1.15rem;
+      padding: 17px 34px;
+      border-radius: 18px;
+      min-width: min(100%, 360px);
+    }
+
+    .offer-meta {
+      margin: 14px 0 0;
+      text-align: center;
+      color: #8f86ad;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      position: relative;
+      z-index: 1;
+    }
+
+    footer {
+      text-align: center;
+      color: #7f769c;
+      font-size: 0.82rem;
+      padding: 12px 0 28px;
+    }
+
+    .auth-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      background: rgba(2, 1, 7, 0.76);
+      backdrop-filter: blur(6px);
+      padding: 16px;
+    }
+
+    .auth-backdrop.show {
+      display: grid;
+    }
+
+    .auth-modal {
+      width: min(540px, 100%);
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(14, 9, 26, 0.98), rgba(8, 5, 16, 0.98));
+      box-shadow: 0 35px 90px rgba(2, 1, 6, 0.72);
+      padding: 22px;
+      position: relative;
+    }
+
+    .auth-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(167, 139, 250, 0.09);
+      color: #ddd6fe;
+      font-weight: 700;
+      font-size: 0.77rem;
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .auth-close:hover {
+      background: rgba(167, 139, 250, 0.2);
+    }
+
+    .auth-modal h3 {
+      font-size: clamp(1.2rem, 2.8vw, 1.85rem);
+      margin-bottom: 14px;
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .auth-tab {
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 700;
+      background: rgba(31, 19, 57, 0.5);
+      color: #c4bce0;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .auth-tab.active {
+      color: #fff;
+      border-color: rgba(167, 139, 250, 0.7);
+      background: linear-gradient(90deg, rgba(109, 40, 217, 0.86), rgba(37, 99, 235, 0.86));
+    }
+
+    .auth-form {
+      display: none;
+      gap: 10px;
+    }
+
+    .auth-form.active {
+      display: grid;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.8rem;
+      color: #beb7d3;
+      font-weight: 600;
+    }
+
+    .field input {
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      background: rgba(8, 5, 16, 0.88);
+      color: #f8f7ff;
+      padding: 12px 12px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: 0.2s ease;
+    }
+
+    .field input:focus {
+      border-color: rgba(167, 139, 250, 0.7);
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.16);
+    }
+
+    .auth-submit {
+      margin-top: 4px;
+      border: 1px solid rgba(167, 139, 250, 0.85);
+      border-radius: 14px;
+      padding: 13px 14px;
+      font-weight: 800;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 0.94rem;
+      color: #fff;
+      cursor: pointer;
+      background: linear-gradient(90deg, #6d28d9 0%, #7c3aed 48%, #2563eb 100%);
+      transition: 0.2s ease;
+    }
+
+    .auth-submit:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
+    .auth-message {
+      margin: 12px 0 4px;
+      min-height: 18px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #b3acc9;
+    }
+
+    .auth-message[data-type="error"] {
+      color: #fda4af;
+    }
+
+    .auth-message[data-type="success"] {
+      color: #86efac;
+    }
+
+    .auth-note {
+      margin: 0;
+      color: #8f86ad;
+      font-size: 0.75rem;
+      line-height: 1.45;
+    }
+
+    .pay-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 21;
+      display: none;
+      place-items: center;
+      background: rgba(2, 1, 7, 0.76);
+      backdrop-filter: blur(6px);
+      padding: 16px;
+    }
+
+    .pay-backdrop.show {
+      display: grid;
+    }
+
+    .pay-modal {
+      width: min(560px, 100%);
+      border-radius: 22px;
+      border: 1px solid rgba(124, 58, 237, 0.62);
+      background: linear-gradient(180deg, rgba(12, 8, 24, 0.98), rgba(7, 5, 15, 0.99));
+      box-shadow:
+        0 35px 90px rgba(2, 1, 8, 0.78),
+        0 0 0 1px rgba(167, 139, 250, 0.16) inset,
+        0 0 34px rgba(124, 58, 237, 0.28);
+      padding: 18px 18px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pay-modal::after {
+      content: "";
+      position: absolute;
+      left: 12%;
+      right: 12%;
+      bottom: -26px;
+      height: 52px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.45), rgba(37, 99, 235, 0.18) 56%, transparent 80%);
+      filter: blur(16px);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .pay-modal h3 {
+      font-size: clamp(1.55rem, 3.5vw, 2rem);
+      margin-bottom: 12px;
+      text-align: center;
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+    }
+
+    .pay-steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: 0 0 16px;
+    }
+
+    .pay-step {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(124, 58, 237, 0.28);
+    }
+
+    .pay-step.active {
+      background: linear-gradient(90deg, #a855f7, #7c3aed);
+      box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
+    }
+
+    .pay-kicker {
+      margin: 0 0 8px;
+      text-align: center;
+      color: #cdbff4;
+      letter-spacing: 0.12em;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .pay-close {
+      top: 10px;
+      right: 10px;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      font-size: 1.25rem;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: rgba(27, 17, 48, 0.74);
+    }
+
+    .pay-close:hover {
+      background: rgba(59, 34, 110, 0.72);
+    }
+
+    .pay-subtitle {
+      margin: 0 0 14px;
+      text-align: center;
+      color: #a89ec5;
+      line-height: 1.5;
+      font-size: 0.92rem;
+    }
+
+    .pay-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .pay-option {
+      border: 1px solid var(--line-soft);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(24, 14, 44, 0.78), rgba(14, 10, 27, 0.86));
+      color: #ece8ff;
+      text-align: left;
+      padding: 13px 14px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      column-gap: 12px;
+    }
+
+    .pay-option:hover {
+      border-color: rgba(167, 139, 250, 0.78);
+      background: linear-gradient(180deg, rgba(43, 25, 81, 0.82), rgba(20, 14, 38, 0.9));
+    }
+
+    .pay-option.active {
+      border-color: rgba(167, 139, 250, 0.82);
+      background: linear-gradient(135deg, rgba(109, 40, 217, 0.42), rgba(37, 99, 235, 0.22));
+      box-shadow: 0 10px 26px rgba(37, 99, 235, 0.2), 0 0 0 1px rgba(167, 139, 250, 0.2) inset;
+    }
+
+    .pay-option-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      border: 1px solid rgba(167, 139, 250, 0.5);
+      background: linear-gradient(145deg, rgba(124, 58, 237, 0.45), rgba(37, 99, 235, 0.38));
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+      line-height: 1;
+      color: #fff;
+      box-shadow: 0 0 16px rgba(124, 58, 237, 0.24);
+    }
+
+    .pay-option-copy {
+      min-width: 0;
+    }
+
+    .pay-option h4 {
+      margin: 0 0 6px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1.02rem;
+      line-height: 1.2;
+      color: #f2eeff;
+    }
+
+    .pay-option p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #bfb7d6;
+      line-height: 1.45;
+    }
+
+    .pay-option-arrow {
+      color: #b8add8;
+      font-size: 1.25rem;
+      line-height: 1;
+      transform: translateY(-1px);
+    }
+
+    .pay-actions {
+      display: flex;
+      justify-content: stretch;
+      gap: 10px;
+    }
+
+    .pay-btn {
+      border: 1px solid rgba(167, 139, 250, 0.75);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(90deg, rgba(109, 40, 217, 0.9), rgba(37, 99, 235, 0.9));
+      cursor: pointer;
+      transition: 0.2s ease;
+      width: 100%;
+    }
+
+    .pay-btn:hover {
+      filter: brightness(1.07);
+    }
+
+    @media (max-width: 1040px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .grid-2,
+      .benefit-list,
+      .compare-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .showcase-row,
+      .showcase-row.reverse {
+        grid-template-columns: 1fr;
+      }
+
+      .showcase-row.reverse .showcase-copy,
+      .showcase-row.reverse .showcase-visual {
+        order: initial;
+      }
+
+      .offer-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .offer-divider {
+        display: none;
+      }
+
+      .hero-start {
+        min-height: 76vh;
+      }
+
+      .hero-menu {
+        display: none;
+      }
+
+      .hero-nav {
+        gap: 10px;
+      }
+    }
+
+    @media (max-width: 1320px) {
+      .hero-menu a {
+        font-size: 0.92rem;
+      }
+
+      .hero-buy-top {
+        padding: 9px 14px;
+        font-size: 0.87rem;
+      }
+
+      .lang-pill {
+        min-width: 140px;
+      }
+
+      .user-chip {
+        max-width: 210px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .hero-start {
+        min-height: 74vh;
+        padding: 104px 16px 28px;
+      }
+
+      .hero-nav {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .hero-logo {
+        font-size: 1.5rem;
+      }
+
+      .hero-nav-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .lang-pill {
+        font-size: 0.77rem;
+        padding: 7px 10px;
+        min-width: 134px;
+      }
+
+      .hero-buy-top {
+        font-size: 0.86rem;
+        padding: 8px 13px;
+      }
+
+      .pay-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pay-actions {
+        flex-direction: column-reverse;
+      }
+
+      .video-custom-controls {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        gap: 8px;
+        padding: 8px 10px;
+      }
+
+      .video-mini-btn {
+        padding: 7px 10px;
+        font-size: 0.73rem;
+      }
+
+      .video-time {
+        min-width: 68px;
+        font-size: 0.73rem;
+      }
+
+      .video-progress {
+        height: 7px;
+      }
+
+      .offer-value {
+        font-size: clamp(3.5rem, 16vw, 4.7rem);
+      }
+
+      .offer-action .btn-main {
+        min-width: 100%;
+        font-size: 1rem;
+      }
+
+      .hero-pill {
+        font-size: 0.78rem;
+        padding: 8px 12px;
+        margin-top: 32px;
+      }
+
+      .hero-title {
+        font-size: clamp(2.3rem, 12vw, 4rem);
+      }
+
+      .hero-cta-row {
+        gap: 6px;
+      }
+
+      .hero-video-center {
+        margin-top: 94px;
+      }
+
+      .hero,
+      .intro-video,
+      .card,
+      .benefits-wrap,
+      .showcase,
+      .demo,
+      .compare,
+      .final-cta {
+        padding: 24px;
+      }
+    }
+
+    @media (hover: none) {
+      .video-stage-top.controls-active .video-custom-controls {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="fx-grid" aria-hidden="true"></div>
+  <div class="fx-blob one" aria-hidden="true"></div>
+  <div class="fx-blob two" aria-hidden="true"></div>
+  <div class="fx-blob three" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <section class="hero-start">
+      <header class="hero-nav">
+        <a class="hero-logo" href="#">
+          <span class="hero-logo-mark" aria-hidden="true"></span>
+          <span class="hero-logo-text">ParaX <em>Pro</em></span>
+        </a>
+        <nav class="hero-menu" aria-label="Main navigation" data-i18n-aria-label="nav.aria">
+          <a href="#funcionalidades" data-i18n="nav.features">Features</a>
+          <a href="#como-funciona" data-i18n="nav.how">How it works</a>
+          <a href="#comprar" data-i18n="nav.price">Pricing</a>
+          <a href="#demo" data-i18n="nav.testimonials">Demo</a>
+        </nav>
+        <div class="hero-nav-actions">
+          <div class="lang-dropdown" id="languageDropdown">
+            <button class="lang-pill" id="languageTrigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Language selector" data-i18n-aria-label="lang.selector_aria">
+              <img class="lang-flag" id="languageCurrentFlag" src="flag-us.png" alt="" aria-hidden="true">
+              <span class="lang-label" id="languageCurrentLabel">English</span>
+              <span class="lang-caret" aria-hidden="true">▼</span>
+            </button>
+            <div class="lang-menu" id="languageMenu" role="listbox">
+              <button class="lang-option" type="button" role="option" data-lang-option="en" aria-selected="true">
+                <img class="lang-flag" src="flag-us.png" alt="" aria-hidden="true">
+                <span data-i18n="lang.option_en">English</span>
+              </button>
+              <button class="lang-option" type="button" role="option" data-lang-option="es" aria-selected="false">
+                <img class="lang-flag" src="flag-es.png" alt="" aria-hidden="true">
+                <span data-i18n="lang.option_es">Español</span>
+              </button>
+              <button class="lang-option" type="button" role="option" data-lang-option="pt" aria-selected="false">
+                <img class="lang-flag" src="flag-br.png" alt="" aria-hidden="true">
+                <span data-i18n="lang.option_pt">Português</span>
+              </button>
+            </div>
+          </div>
+          <a class="hero-buy-top js-buy-link" href="https://checkout.paraxpro.com" data-buy-link="true" data-i18n="cta.buy_now_top">Get ParaX Pro</a>
+          <div class="user-chip" id="userChip">
+            <span id="userChipName">Account active</span>
+            <button id="logoutBtn" type="button" data-i18n="auth.logout">Logout</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="hero-video-center intro-video" id="video-top">
+        <div class="intro-video-head">
+          <p class="tag" data-i18n="video.tag">Real workflow preview</p>
+          <h2 data-i18n="video.title">Watch static scenes come to life</h2>
+          <p data-i18n="video.desc">This is what your scenes are missing: cinematic depth, motion and focus.</p>
+        </div>
+        <div class="video-stage-top">
+          <video class="video-placeholder-image" id="mainDemoVideo" preload="metadata" poster="parax-pro-video-cover.png">
+            <source src="parax-pro-demo.mp4" type="video/mp4">
+            Your browser does not support HTML5 video playback.
+          </video>
+          <div class="video-stage-overlay" aria-hidden="true"></div>
+          <button class="video-play-center" id="mainDemoPlay" type="button" aria-label="Play demo video" data-i18n-aria-label="video.play_aria"></button>
+          <div class="video-custom-controls" id="mainDemoControls">
+            <button class="video-mini-btn" id="mainDemoToggle" type="button" data-i18n="video.pause_btn">Pause</button>
+            <p class="video-time" id="mainDemoTime">0:00 / 0:24</p>
+            <div class="video-progress" id="mainDemoProgress" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Video progress" data-i18n-aria-label="video.progress_aria">
+              <div class="video-progress-fill" id="mainDemoProgressFill"></div>
+              <span class="video-progress-thumb" id="mainDemoProgressThumb"></span>
+            </div>
+          </div>
+        </div>
+        <p class="video-hint" data-i18n="video.hint">Real ParaX Pro workflow preview inside After Effects.</p>
+      </div>
+    </section>
+
+    <section class="panel demo" id="demo">
+      <div class="demo-head">
+        <p class="tag" data-i18n="demo.tag">Before/After video</p>
+        <h2 data-i18n="demo.title">Show the transformation in seconds</h2>
+        <p data-i18n="demo.desc">Space ready for your visual demo. Drag the slider to see the contrast.</p>
+      </div>
+      <div class="ba-shell">
+        <img class="ba-base" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80" alt="After with ParaX Pro" data-i18n-alt="demo.alt_after">
+        <div class="ba-overlay" id="baOverlay">
+          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80" alt="Before" data-i18n-alt="demo.alt_before">
+        </div>
+        <div class="ba-handle" id="baHandle"></div>
+        <span class="ba-label before" data-i18n="demo.before">Before</span>
+        <span class="ba-label after" data-i18n="demo.after">After with ParaX Pro</span>
+        <input class="ba-input" id="baInput" type="range" min="5" max="95" value="50" aria-label="Before and after slider" data-i18n-aria-label="demo.slider_aria">
+      </div>
+    </section>
+
+    <section class="grid-2" id="como-funciona">
+      <article class="panel card">
+        <p class="tag" data-i18n="problem.tag">Problem</p>
+        <h2 data-i18n="problem.title">Manual setup steals time from your best creative decisions.</h2>
+        <p data-i18n="problem.desc">
+          Building rigs, tuning camera, testing depth and refining focus manually in every project wastes time and creative flow.
+        </p>
+        <ul class="signal-list pain">
+          <li data-i18n="problem.li1">Too much time spent building basic structure.</li>
+          <li data-i18n="problem.li2">Repetitive adjustments to scale layers correctly.</li>
+          <li data-i18n="problem.li3">Less time for direction and final polish.</li>
+        </ul>
+      </article>
+
+      <article class="panel card">
+        <p class="tag" data-i18n="solution.tag">Solution</p>
+        <h2 data-i18n="solution.title">ParaX Pro turns technical setup into a one-click step.</h2>
+        <p data-i18n="solution.desc">
+          The plugin builds camera rigs, organizes layers in 3D and applies depth, focus and motion with just a few clicks.
+          From subtle to dramatic, you choose the impact.
+        </p>
+        <ul class="signal-list solution">
+          <li data-i18n="solution.li1">Less setup and more creative composition.</li>
+          <li data-i18n="solution.li2">More visual consistency across every project.</li>
+          <li data-i18n="solution.li3">Faster delivery without sacrificing premium quality.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="panel benefits-wrap" id="funcionalidades">
+      <p class="tag" data-i18n="benefits.tag">Benefits</p>
+      <h2 data-i18n="benefits.title">Everything you need to deliver premium cinematic motion faster.</h2>
+      <p data-i18n="benefits.desc">Everything below is already part of ParaX Pro workflow:</p>
+      <ul class="benefit-list">
+        <li data-i18n="benefits.li1">Automatic camera rig creation</li>
+        <li data-i18n="benefits.li2">Real depth in seconds</li>
+        <li data-i18n="benefits.li3">Smart focus control</li>
+        <li data-i18n="benefits.li4">Automatic scaling that adapts to depth and camera distance</li>
+        <li data-i18n="benefits.li5">No complex expressions</li>
+        <li data-i18n="benefits.li6">Works with layered PSD and AI files</li>
+      </ul>
+    </section>
+
+    <section class="panel showcase">
+      <div class="showcase-head">
+        <p class="tag" data-i18n="showcase.tag">Inside ParaX Pro</p>
+        <h2 data-i18n="showcase.title">How it works in real projects</h2>
+        <p data-i18n="showcase.lead">Three core blocks that make the workflow faster and cleaner.</p>
+      </div>
+
+      <div class="showcase-list">
+        <article class="showcase-row">
+          <div class="showcase-copy">
+            <h3 data-i18n="showcase.one.title">One-click cinematic setup</h3>
+            <p data-i18n="showcase.one.desc">Convert layered artwork into a camera-ready 3D scene in seconds.</p>
+          </div>
+          <div class="showcase-visual visual-one">
+            <div class="showcase-window">
+              <div class="showcase-topbar"><span></span><span></span><span></span></div>
+              <div class="showcase-body">
+                <div class="scene-stack"><i></i><i></i><i></i><i></i></div>
+                <div class="preview-box"></div>
+              </div>
+              <div class="timeline-mini"></div>
+            </div>
+            <span class="showcase-chip" data-i18n="showcase.one.chip">1-Click</span>
+          </div>
+        </article>
+
+        <article class="showcase-row reverse">
+          <div class="showcase-copy">
+            <h3 data-i18n="showcase.two.title">AutoScale keeps proportions right</h3>
+            <p data-i18n="showcase.two.desc">Move layers in depth while size stays visually balanced and natural.</p>
+          </div>
+          <div class="showcase-visual visual-two">
+            <div class="showcase-window">
+              <div class="showcase-topbar"><span></span><span></span><span></span></div>
+              <div class="showcase-body">
+                <div class="scene-stack"><i></i><i></i><i></i><i></i></div>
+                <div class="preview-box"></div>
+              </div>
+              <div class="timeline-mini"></div>
+            </div>
+            <span class="showcase-chip" data-i18n="showcase.two.chip">AutoScale</span>
+          </div>
+        </article>
+
+        <article class="showcase-row">
+          <div class="showcase-copy">
+            <h3 data-i18n="showcase.three.title">Complete camera rig in one step</h3>
+            <p data-i18n="showcase.three.desc">Build a full camera rig with controls ready for smooth cinematic moves.</p>
+          </div>
+          <div class="showcase-visual visual-three">
+            <div class="showcase-window">
+              <div class="showcase-topbar"><span></span><span></span><span></span></div>
+              <div class="showcase-body">
+                <div class="tool-map"><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="tool-panel"><span></span><span></span><span></span><span></span></div>
+              </div>
+              <div class="timeline-mini"></div>
+            </div>
+            <span class="showcase-chip" data-i18n="showcase.three.chip">Camera Rig</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel compare">
+      <p class="tag" data-i18n="compare.tag">Comparison</p>
+      <h2 data-i18n="compare.title">Manual vs with plugin</h2>
+      <div class="compare-grid">
+        <article class="compare-card bad">
+          <h3 data-i18n="compare.manual_title">Manual workflow</h3>
+          <ul>
+            <li data-i18n="compare.manual_li1">Rig and camera built from scratch in every scene.</li>
+            <li data-i18n="compare.manual_li2">Depth adjusted by trial and error.</li>
+            <li data-i18n="compare.manual_li3">Higher risk of technical inconsistencies.</li>
+            <li data-i18n="compare.manual_li4">Less time for visual impact.</li>
+          </ul>
+        </article>
+        <article class="compare-card good">
+          <h3 data-i18n="compare.plugin_title">With ParaX Pro</h3>
+          <ul>
+            <li data-i18n="compare.plugin_li1">Rig created automatically in seconds.</li>
+            <li data-i18n="compare.plugin_li2">Focus, depth and scale applied intelligently.</li>
+            <li data-i18n="compare.plugin_li3">Clean, repeatable workflow for any project.</li>
+            <li data-i18n="compare.plugin_li4">More time for creative direction and cinematic results.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel final-cta" id="comprar">
+      <p class="offer-badge" data-i18n="final.badge">ParaX Pro - Lifetime License</p>
+
+      <div class="offer-grid">
+        <div class="offer-price">
+          <p class="offer-amount">
+            <span class="offer-currency" data-i18n="final.price_currency">$</span>
+            <span class="offer-value" data-i18n="final.price_value">15</span>
+          </p>
+          <p class="offer-sub" data-i18n="final.price_sub">USD - One-time payment</p>
+          <p class="offer-old" data-i18n="final.price_old">Was $79</p>
+          <p class="offer-save" data-i18n="final.price_save">Save 75%</p>
+        </div>
+
+        <div class="offer-divider" aria-hidden="true"></div>
+
+        <ul class="offer-features">
+          <li data-i18n="final.li1">1 Click Cinema</li>
+          <li data-i18n="final.li2">Smart Depth</li>
+          <li data-i18n="final.li3">Auto Camera Motion</li>
+          <li data-i18n="final.li4">Auto Focus</li>
+          <li data-i18n="final.li5">50+ presets included</li>
+          <li data-i18n="final.li6">Free updates</li>
+          <li data-i18n="final.li7">Email support</li>
+          <li data-i18n="final.li8">Compatible AE 2022-2025</li>
+        </ul>
+      </div>
+
+      <div class="offer-action">
+        <a class="btn btn-main js-buy-link" href="https://checkout.paraxpro.com" data-buy-link="true" data-i18n="final.buy">Buy ParaX Pro</a>
+      </div>
+      <p class="offer-meta" data-i18n="final.meta">Instant download - 7-day guarantee - Secure payment</p>
+    </section>
+
+    <footer data-i18n="footer.text">ParaX Pro - Premium plugin for cinematic depth in After Effects.</footer>
+  </div>
+
+  <div class="auth-backdrop" id="authBackdrop" aria-hidden="true">
+    <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <button class="auth-close" id="authCloseBtn" type="button" data-i18n="auth.close">Close</button>
+      <p class="tag" data-i18n="auth.tag">Customer area</p>
+      <h3 id="authTitle" data-i18n="auth.title">Sign in or create your account</h3>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" type="button" data-i18n="auth.tab_login">Login</button>
+        <button class="auth-tab" id="tabSignup" type="button" data-i18n="auth.tab_signup">Sign up</button>
+      </div>
+
+      <form class="auth-form active" id="loginForm" autocomplete="on">
+        <div class="field">
+          <label for="loginEmail" data-i18n="auth.email">Email</label>
+          <input id="loginEmail" name="email" type="email" required>
+        </div>
+        <div class="field">
+          <label for="loginPassword" data-i18n="auth.password">Password</label>
+          <input id="loginPassword" name="password" type="password" minlength="6" required>
+        </div>
+        <button class="auth-submit" type="submit" data-i18n="auth.login_submit">Sign in</button>
+      </form>
+
+      <form class="auth-form" id="signupForm" autocomplete="on">
+        <div class="field">
+          <label for="signupName" data-i18n="auth.name">Name</label>
+          <input id="signupName" name="name" type="text" minlength="2" required>
+        </div>
+        <div class="field">
+          <label for="signupEmail" data-i18n="auth.email">Email</label>
+          <input id="signupEmail" name="email" type="email" required>
+        </div>
+        <div class="field">
+          <label for="signupPassword" data-i18n="auth.password">Password</label>
+          <input id="signupPassword" name="password" type="password" minlength="6" required>
+        </div>
+        <div class="field">
+          <label for="signupPasswordConfirm" data-i18n="auth.confirm_password">Confirm password</label>
+          <input id="signupPasswordConfirm" name="passwordConfirm" type="password" minlength="6" required>
+        </div>
+        <button class="auth-submit" type="submit" data-i18n="auth.signup_submit">Create account</button>
+      </form>
+
+      <p class="auth-message" id="authMessage" data-type="" aria-live="polite"></p>
+      <p class="auth-note" data-i18n="auth.note">Accounts are saved in this browser (local version of the landing page).</p>
+    </div>
+  </div>
+
+  <div class="pay-backdrop" id="paymentBackdrop" aria-hidden="true">
+    <div class="pay-modal" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
+      <button class="auth-close pay-close" id="paymentCloseBtn" type="button" aria-label="Close" data-i18n-aria-label="pay.close">&times;</button>
+      <div class="pay-steps" aria-hidden="true">
+        <span class="pay-step active"></span>
+        <span class="pay-step"></span>
+        <span class="pay-step"></span>
+      </div>
+      <p class="pay-kicker" data-i18n="pay.kicker">Parax Pro - $15</p>
+      <h3 id="paymentTitle" data-i18n="pay.title">How would you like to pay?</h3>
+      <p class="pay-subtitle" data-i18n="pay.subtitle">Select how you want to complete your purchase.</p>
+
+      <div class="pay-grid">
+        <button class="pay-option active" type="button" data-pay-method="stripe">
+          <span class="pay-option-icon" aria-hidden="true">💳</span>
+          <span class="pay-option-copy">
+            <h4 data-i18n="pay.stripe_title">Stripe</h4>
+            <p data-i18n="pay.stripe_desc">Fast approval with international cards.</p>
+          </span>
+          <span class="pay-option-arrow" aria-hidden="true">›</span>
+        </button>
+        <button class="pay-option" type="button" data-pay-method="pix">
+          <span class="pay-option-icon" aria-hidden="true">⚡</span>
+          <span class="pay-option-copy">
+            <h4 data-i18n="pay.pix_title">PIX</h4>
+            <p data-i18n="pay.pix_desc">Instant approval with QR code.</p>
+          </span>
+          <span class="pay-option-arrow" aria-hidden="true">›</span>
+        </button>
+      </div>
+
+      <div class="pay-actions">
+        <button class="pay-btn" id="paymentContinueBtn" type="button" data-i18n="pay.continue">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var input = document.getElementById("baInput");
+      var overlay = document.getElementById("baOverlay");
+      var handle = document.getElementById("baHandle");
+      if (!input || !overlay || !handle) return;
+
+      function update() {
+        var value = input.value + "%";
+        overlay.style.width = value;
+        handle.style.left = value;
+      }
+
+      input.addEventListener("input", update);
+      update();
+    })();
+
+    (function () {
+      var video = document.getElementById("mainDemoVideo");
+      var playButton = document.getElementById("mainDemoPlay");
+      var toggleButton = document.getElementById("mainDemoToggle");
+      var progress = document.getElementById("mainDemoProgress");
+      var progressFill = document.getElementById("mainDemoProgressFill");
+      var progressThumb = document.getElementById("mainDemoProgressThumb");
+      var timeLabel = document.getElementById("mainDemoTime");
+      if (!video || !playButton || !toggleButton || !progress || !progressFill || !progressThumb || !timeLabel || !video.parentElement) return;
+      var stage = video.parentElement;
+      var FALLBACK_DURATION = 24;
+      var progressRafId = 0;
+      var isScrubbing = false;
+
+      function t(key) {
+        if (window.ParaxI18n && typeof window.ParaxI18n.translate === "function") {
+          return window.ParaxI18n.translate(key);
+        }
+        var fallback = {
+          "video.play_btn": "Play",
+          "video.pause_btn": "Pause"
+        };
+        return fallback[key] || key;
+      }
+
+      function formatTime(value) {
+        if (!isFinite(value) || value < 0) return "0:00";
+        var total = Math.floor(value);
+        var minutes = Math.floor(total / 60);
+        var seconds = String(total % 60).padStart(2, "0");
+        return minutes + ":" + seconds;
+      }
+
+      function getDuration() {
+        if (isFinite(video.duration) && video.duration > 0) return video.duration;
+        return FALLBACK_DURATION;
+      }
+
+      function updateProgress() {
+        var duration = getDuration();
+        var current = Math.min(video.currentTime || 0, duration);
+        var percent = duration > 0 ? (current / duration) * 100 : 0;
+        var clampedPercent = Math.max(0, Math.min(100, percent));
+        progressFill.style.transform = "scaleX(" + (clampedPercent / 100) + ")";
+        progressThumb.style.left = clampedPercent + "%";
+        progress.setAttribute("aria-valuenow", String(Math.round(percent)));
+        timeLabel.textContent = formatTime(current) + " / " + formatTime(duration);
+      }
+
+      function setScrubbingState(active) {
+        isScrubbing = Boolean(active);
+        progress.classList.toggle("is-dragging", isScrubbing);
+      }
+
+      function stopProgressLoop() {
+        if (!progressRafId) return;
+        cancelAnimationFrame(progressRafId);
+        progressRafId = 0;
+      }
+
+      function runProgressLoop() {
+        updateProgress();
+        if (!video.paused && !video.ended) {
+          progressRafId = requestAnimationFrame(runProgressLoop);
+        } else {
+          progressRafId = 0;
+        }
+      }
+
+      function startProgressLoop() {
+        if (progressRafId) return;
+        progressRafId = requestAnimationFrame(runProgressLoop);
+      }
+
+      function activateControls() {
+        stage.classList.add("controls-active");
+      }
+
+      function updateVideoState() {
+        var isPlaying = !video.paused && !video.ended;
+        stage.classList.toggle("is-playing", isPlaying);
+        toggleButton.textContent = t(isPlaying ? "video.pause_btn" : "video.play_btn");
+        updateProgress();
+      }
+
+      function seekToPosition(clientX) {
+        if (!(isFinite(video.duration) && video.duration > 0)) return;
+        var rect = progress.getBoundingClientRect();
+        if (!rect.width) return;
+        var ratio = (clientX - rect.left) / rect.width;
+        ratio = Math.max(0, Math.min(1, ratio));
+        video.currentTime = ratio * video.duration;
+        updateProgress();
+      }
+
+      playButton.addEventListener("click", function () {
+        activateControls();
+        var playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === "function") {
+          playPromise.catch(function () {});
+        }
+      });
+
+      toggleButton.addEventListener("click", function () {
+        if (video.paused || video.ended) {
+          var playPromise = video.play();
+          if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(function () {});
+          }
+        } else {
+          video.pause();
+        }
+      });
+
+      progress.addEventListener("pointerdown", function (event) {
+        setScrubbingState(true);
+        seekToPosition(event.clientX);
+        if (progress.setPointerCapture) {
+          progress.setPointerCapture(event.pointerId);
+        }
+      });
+
+      progress.addEventListener("pointermove", function (event) {
+        if (!isScrubbing) return;
+        seekToPosition(event.clientX);
+      });
+
+      progress.addEventListener("pointerup", function (event) {
+        setScrubbingState(false);
+        if (progress.releasePointerCapture && progress.hasPointerCapture && progress.hasPointerCapture(event.pointerId)) {
+          progress.releasePointerCapture(event.pointerId);
+        }
+      });
+
+      progress.addEventListener("pointercancel", function () {
+        setScrubbingState(false);
+      });
+
+      progress.addEventListener("lostpointercapture", function () {
+        setScrubbingState(false);
+      });
+
+      progress.addEventListener("keydown", function (event) {
+        if (!(isFinite(video.duration) && video.duration > 0)) return;
+        var step = Math.max(1, video.duration * 0.02);
+        if (event.key === "ArrowRight") {
+          video.currentTime = Math.min(video.duration, video.currentTime + step);
+          event.preventDefault();
+        } else if (event.key === "ArrowLeft") {
+          video.currentTime = Math.max(0, video.currentTime - step);
+          event.preventDefault();
+        }
+        updateProgress();
+      });
+
+      video.addEventListener("play", function () {
+        activateControls();
+        updateVideoState();
+        startProgressLoop();
+      });
+      video.addEventListener("pause", function () {
+        stopProgressLoop();
+        updateVideoState();
+      });
+      video.addEventListener("ended", function () {
+        stopProgressLoop();
+        updateVideoState();
+      });
+      video.addEventListener("timeupdate", function () {
+        if (!progressRafId) updateProgress();
+      });
+      video.addEventListener("loadedmetadata", updateProgress);
+      video.addEventListener("durationchange", updateProgress);
+
+      document.addEventListener("parax:language-changed", function () {
+        updateVideoState();
+      });
+
+      updateVideoState();
+    })();
+
+    (function () {
+      var LANGUAGE_KEY = "parax_pro_lang_v1";
+      var defaultLanguage = "en";
+      var languageDropdown = document.getElementById("languageDropdown");
+      var languageTrigger = document.getElementById("languageTrigger");
+      var languageMenu = document.getElementById("languageMenu");
+      var languageCurrentLabel = document.getElementById("languageCurrentLabel");
+      var languageCurrentFlag = document.getElementById("languageCurrentFlag");
+      var languageOptions = Array.prototype.slice.call(document.querySelectorAll("[data-lang-option]"));
+      var currentLanguage = defaultLanguage;
+      var languageMeta = {
+        en: { flag: "flag-us.png", labelKey: "lang.option_en" },
+        es: { flag: "flag-es.png", labelKey: "lang.option_es" },
+        pt: { flag: "flag-br.png", labelKey: "lang.option_pt" }
+      };
+
+      var translations = {
+        en: {
+          "lang.selector_aria": "Language selector",
+          "lang.option_en": "English",
+          "lang.option_es": "Spanish",
+          "lang.option_pt": "Portuguese",
+          "nav.aria": "Main navigation",
+          "nav.features": "Features",
+          "nav.how": "How it works",
+          "nav.price": "Pricing",
+          "nav.testimonials": "Demo",
+          "cta.buy_now_top": "Get ParaX Pro",
+          "auth.logout": "Logout",
+          "hero.pill": "Plugin for After Effects - ParaX Pro",
+          "hero.title": "Cinematic scenes<br><span class=\"t-purple\">in one click</span>",
+          "hero.lead": "From layered PSD and AI files to camera-ready depth, focus and motion in seconds. ParaX Pro gives motion designers a faster path to premium scenes.",
+          "hero.cta_buy": "Start creating in seconds - Get ParaX Pro",
+          "hero.cta_demo": "Watch demo",
+          "video.tag": "Real workflow preview",
+          "video.title": "Watch static scenes come to life",
+          "video.desc": "This is what your scenes are missing: cinematic depth, motion and focus.",
+          "video.alt_preview": "ParaX Pro demo preview",
+          "video.coming_soon": "Demo coming soon",
+          "video.preview_caption": "Product preview",
+          "video.unsupported": "Your browser does not support HTML5 video playback.",
+          "video.play_aria": "Play demo video",
+          "video.play_btn": "Play",
+          "video.pause_btn": "Pause",
+          "video.progress_aria": "Video progress",
+          "video.hint": "Real ParaX Pro workflow preview inside After Effects.",
+          "problem.tag": "Problem",
+          "problem.title": "Manual setup steals time from your best creative decisions.",
+          "problem.desc": "Building rigs, tuning camera, testing depth and refining focus manually in every project wastes time and creative flow.",
+          "problem.li1": "Too much time spent building basic structure.",
+          "problem.li2": "Repetitive adjustments to scale layers correctly.",
+          "problem.li3": "Less time for direction and final polish.",
+          "solution.tag": "Solution",
+          "solution.title": "ParaX Pro turns technical setup into a one-click step.",
+          "solution.desc": "The plugin builds camera rigs, organizes layers in 3D and applies depth, focus and motion with just a few clicks. From subtle to dramatic, you choose the impact.",
+          "solution.li1": "Less setup and more creative composition.",
+          "solution.li2": "More visual consistency across every project.",
+          "solution.li3": "Faster delivery without sacrificing premium quality.",
+          "benefits.tag": "Benefits",
+          "benefits.title": "Everything you need to deliver premium cinematic motion faster.",
+          "benefits.desc": "Everything below is already part of ParaX Pro workflow:",
+          "benefits.li1": "Automatic camera rig creation",
+          "benefits.li2": "Real depth in seconds",
+          "benefits.li3": "Smart focus control",
+          "benefits.li4": "Automatic scaling that adapts to depth and camera distance",
+          "benefits.li5": "No complex expressions",
+          "benefits.li6": "Works with layered PSD and AI files",
+          "showcase.tag": "Inside ParaX Pro",
+          "showcase.title": "How it works in real projects",
+          "showcase.lead": "Three core blocks that make the workflow faster and cleaner.",
+          "showcase.one.title": "One-click cinematic setup",
+          "showcase.one.desc": "Convert layered artwork into a camera-ready 3D scene in seconds.",
+          "showcase.one.chip": "1-Click",
+          "showcase.two.title": "AutoScale keeps proportions right",
+          "showcase.two.desc": "Move layers in depth while size stays visually balanced and natural.",
+          "showcase.two.chip": "AutoScale",
+          "showcase.three.title": "Complete camera rig in one step",
+          "showcase.three.desc": "Build a full camera rig with controls ready for smooth cinematic moves.",
+          "showcase.three.chip": "Camera Rig",
+          "demo.tag": "Before/After video",
+          "demo.title": "Show the transformation in seconds",
+          "demo.desc": "Space ready for your visual demo. Drag the slider to see the contrast.",
+          "demo.before": "Before",
+          "demo.after": "After with ParaX Pro",
+          "demo.slider_aria": "Before and after slider",
+          "demo.alt_before": "Before",
+          "demo.alt_after": "After with ParaX Pro",
+          "compare.tag": "Comparison",
+          "compare.title": "Manual vs with plugin",
+          "compare.manual_title": "Manual workflow",
+          "compare.manual_li1": "Rig and camera built from scratch in every scene.",
+          "compare.manual_li2": "Depth adjusted by trial and error.",
+          "compare.manual_li3": "Higher risk of technical inconsistencies.",
+          "compare.manual_li4": "Less time for visual impact.",
+          "compare.plugin_title": "With ParaX Pro",
+          "compare.plugin_li1": "Rig created automatically in seconds.",
+          "compare.plugin_li2": "Focus, depth and scale applied intelligently.",
+          "compare.plugin_li3": "Clean, repeatable workflow for any project.",
+          "compare.plugin_li4": "More time for creative direction and cinematic results.",
+          "final.badge": "ParaX Pro - Lifetime License",
+          "final.price_currency": "$",
+          "final.price_value": "15",
+          "final.price_sub": "USD - One-time payment",
+          "final.price_old": "Was $79",
+          "final.price_save": "Save 75%",
+          "final.li1": "1 Click Cinema",
+          "final.li2": "Smart Depth",
+          "final.li3": "Auto Camera Motion",
+          "final.li4": "Auto Focus",
+          "final.li5": "50+ presets included",
+          "final.li6": "Free updates",
+          "final.li7": "Email support",
+          "final.li8": "Compatible AE 2022-2025",
+          "final.buy": "Buy ParaX Pro",
+          "final.meta": "Instant download - 7-day guarantee - Secure payment",
+          "footer.text": "ParaX Pro - Premium plugin for cinematic depth in After Effects.",
+          "pay.close": "Close",
+          "pay.kicker": "Parax Pro - $15",
+          "pay.tag": "Secure checkout",
+          "pay.title": "How would you like to pay?",
+          "pay.subtitle": "Select how you want to complete your purchase.",
+          "pay.stripe_title": "Stripe",
+          "pay.stripe_desc": "Fast approval with international cards.",
+          "pay.pix_title": "PIX",
+          "pay.pix_desc": "Instant approval with QR code.",
+          "pay.cancel": "Cancel",
+          "pay.continue": "Continue",
+          "auth.close": "Close",
+          "auth.tag": "Customer area",
+          "auth.title": "Sign in or create your account",
+          "auth.tab_login": "Login",
+          "auth.tab_signup": "Sign up",
+          "auth.email": "Email",
+          "auth.password": "Password",
+          "auth.login_submit": "Sign in",
+          "auth.name": "Name",
+          "auth.confirm_password": "Confirm password",
+          "auth.signup_submit": "Create account",
+          "auth.note": "Accounts are saved in this browser (local version of the landing page).",
+          "auth.msg.need_account": "Create your account to continue to checkout.",
+          "auth.msg.name_invalid": "Please enter a valid name.",
+          "auth.msg.email_invalid": "Please enter a valid email address.",
+          "auth.msg.password_short": "Password must be at least 6 characters.",
+          "auth.msg.password_mismatch": "Passwords do not match.",
+          "auth.msg.email_exists": "This email is already registered.",
+          "auth.msg.signup_success": "Account created successfully.",
+          "auth.msg.account_not_found": "Account not found. Please sign up first.",
+          "auth.msg.password_wrong": "Incorrect password.",
+          "auth.msg.login_success": "Login successful.",
+          "user.hello": "Hello, {{name}}",
+          "user.active": "Account active"
+        },
+        es: {
+          "lang.selector_aria": "Selector de idioma",
+          "lang.option_en": "Inglés",
+          "lang.option_es": "Español",
+          "lang.option_pt": "Portugués",
+          "nav.aria": "Navegación principal",
+          "nav.features": "Funcionalidades",
+          "nav.how": "Cómo funciona",
+          "nav.price": "Precio",
+          "nav.testimonials": "Demo",
+          "cta.buy_now_top": "Obtener ParaX Pro",
+          "auth.logout": "Cerrar sesión",
+          "hero.pill": "Plugin para After Effects - ParaX Pro",
+          "hero.title": "Escenas cinematográficas<br><span class=\"t-purple\">en un clic</span>",
+          "hero.lead": "De archivos PSD y AI en capas a profundidad, foco y movimiento de cámara en segundos. ParaX Pro le da a motion designers un camino más rápido a resultados premium.",
+          "hero.cta_buy": "Empieza a crear en segundos - Obtener ParaX Pro",
+          "hero.cta_demo": "Ver demostración",
+          "video.tag": "Vista real del workflow",
+          "video.title": "Mira cómo escenas estáticas cobran vida",
+          "video.desc": "Esto es lo que les falta a tus escenas: profundidad, movimiento y foco cinematográfico.",
+          "video.alt_preview": "Vista previa del demo de ParaX Pro",
+          "video.coming_soon": "Demo disponible pronto",
+          "video.preview_caption": "Vista previa del producto",
+          "video.unsupported": "Tu navegador no soporta reproducción de video HTML5.",
+          "video.play_aria": "Reproducir video de demostracion",
+          "video.play_btn": "Play",
+          "video.pause_btn": "Pausar",
+          "video.progress_aria": "Progreso del video",
+          "video.hint": "Vista real del workflow de ParaX Pro dentro de After Effects.",
+          "problem.tag": "Problema",
+          "problem.title": "El setup manual te quita tiempo de tus mejores decisiones creativas.",
+          "problem.desc": "Crear rigs, ajustar cámara, probar profundidad y refinar foco manualmente en cada proyecto consume tiempo y ritmo creativo.",
+          "problem.li1": "Demasiado tiempo montando la estructura básica.",
+          "problem.li2": "Ajustes repetitivos para escalar capas correctamente.",
+          "problem.li3": "Menos tiempo para dirección y acabado final.",
+          "solution.tag": "Solución",
+          "solution.title": "ParaX Pro convierte el setup técnico en un paso de un clic.",
+          "solution.desc": "El plugin crea rigs de cámara, organiza capas en 3D y aplica profundidad, foco y movimiento en pocos clics. De sutil a dramático, tú eliges el impacto.",
+          "solution.li1": "Menos setup y más composición creativa.",
+          "solution.li2": "Mayor consistencia visual en todos los proyectos.",
+          "solution.li3": "Entrega más rápida sin perder calidad premium.",
+          "benefits.tag": "Beneficios",
+          "benefits.title": "Todo lo que necesitas para entregar motion cinematográfico premium más rápido.",
+          "benefits.desc": "Todo lo siguiente ya viene en el flujo de ParaX Pro:",
+          "benefits.li1": "Creación automática de rig de cámara",
+          "benefits.li2": "Profundidad real en segundos",
+          "benefits.li3": "Control inteligente de foco",
+          "benefits.li4": "Escalado automático que se adapta a profundidad y distancia de cámara",
+          "benefits.li5": "Sin expresiones complejas",
+          "benefits.li6": "Funciona con archivos PSD y AI en capas",
+          "showcase.tag": "Dentro de ParaX Pro",
+          "showcase.title": "Como funciona en proyectos reales",
+          "showcase.lead": "Tres bloques clave para un workflow mas rapido y limpio.",
+          "showcase.one.title": "Setup cinematografico en un clic",
+          "showcase.one.desc": "Convierte arte en capas en una escena 3D lista para camara en segundos.",
+          "showcase.one.chip": "1-Clic",
+          "showcase.two.title": "AutoScale mantiene proporciones",
+          "showcase.two.desc": "Mueve capas en profundidad sin perder equilibrio visual de escala.",
+          "showcase.two.chip": "AutoScale",
+          "showcase.three.title": "Rig de camara completo",
+          "showcase.three.desc": "Crea un rig de camara completo con controles listos para movimientos cinematograficos.",
+          "showcase.three.chip": "Camera Rig",
+          "demo.tag": "Video antes/después",
+          "demo.title": "Muestra la transformación en segundos",
+          "demo.desc": "Espacio listo para tu demo visual. Arrastra el deslizador para ver el contraste.",
+          "demo.before": "Antes",
+          "demo.after": "Después con ParaX Pro",
+          "demo.slider_aria": "Deslizador de antes y después",
+          "demo.alt_before": "Antes",
+          "demo.alt_after": "Después con ParaX Pro",
+          "compare.tag": "Comparación",
+          "compare.title": "Manual vs con plugin",
+          "compare.manual_title": "Flujo manual",
+          "compare.manual_li1": "Rig y cámara montados desde cero en cada escena.",
+          "compare.manual_li2": "Profundidad ajustada por prueba y error.",
+          "compare.manual_li3": "Mayor riesgo de inconsistencias técnicas.",
+          "compare.manual_li4": "Menos tiempo para impacto visual.",
+          "compare.plugin_title": "Con ParaX Pro",
+          "compare.plugin_li1": "Rig creado automáticamente en segundos.",
+          "compare.plugin_li2": "Foco, profundidad y escala aplicados con lógica inteligente.",
+          "compare.plugin_li3": "Flujo limpio y repetible para cualquier proyecto.",
+          "compare.plugin_li4": "Más tiempo para dirección creativa y resultado cinematográfico.",
+          "final.badge": "ParaX Pro - Licencia de por vida",
+          "final.price_currency": "$",
+          "final.price_value": "15",
+          "final.price_sub": "USD - Pago unico",
+          "final.price_old": "Antes $79",
+          "final.price_save": "Ahorra 75%",
+          "final.li1": "1 Click Cinema",
+          "final.li2": "Smart Depth",
+          "final.li3": "Auto Camera Motion",
+          "final.li4": "Auto Focus",
+          "final.li5": "50+ presets incluidos",
+          "final.li6": "Actualizaciones gratis",
+          "final.li7": "Soporte por email",
+          "final.li8": "Compatible AE 2022-2025",
+          "final.buy": "Comprar ParaX Pro",
+          "final.meta": "Descarga instantanea - Garantia de 7 dias - Pago seguro",
+          "footer.text": "ParaX Pro - Plugin premium para profundidad cinematográfica en After Effects.",
+          "pay.close": "Cerrar",
+          "pay.kicker": "Parax Pro - $15",
+          "pay.tag": "Checkout seguro",
+          "pay.title": "Como deseas pagar?",
+          "pay.subtitle": "Selecciona como quieres completar tu compra.",
+          "pay.stripe_title": "Stripe",
+          "pay.stripe_desc": "Aprobacion rapida con tarjetas internacionales.",
+          "pay.pix_title": "PIX",
+          "pay.pix_desc": "Aprobacion instantanea con codigo QR.",
+          "pay.cancel": "Cancelar",
+          "pay.continue": "Continuar",
+          "auth.close": "Cerrar",
+          "auth.tag": "Área del cliente",
+          "auth.title": "Inicia sesión o crea tu cuenta",
+          "auth.tab_login": "Login",
+          "auth.tab_signup": "Registro",
+          "auth.email": "Correo",
+          "auth.password": "Contraseña",
+          "auth.login_submit": "Entrar",
+          "auth.name": "Nombre",
+          "auth.confirm_password": "Confirmar contraseña",
+          "auth.signup_submit": "Crear cuenta",
+          "auth.note": "Las cuentas se guardan en este navegador (versión local de la landing).",
+          "auth.msg.need_account": "Crea tu cuenta para continuar a la compra.",
+          "auth.msg.name_invalid": "Ingresa un nombre válido.",
+          "auth.msg.email_invalid": "Ingresa un correo válido.",
+          "auth.msg.password_short": "La contraseña debe tener al menos 6 caracteres.",
+          "auth.msg.password_mismatch": "Las contraseñas no coinciden.",
+          "auth.msg.email_exists": "Este correo ya está registrado.",
+          "auth.msg.signup_success": "Registro completado con éxito.",
+          "auth.msg.account_not_found": "Cuenta no encontrada. Regístrate primero.",
+          "auth.msg.password_wrong": "Contraseña incorrecta.",
+          "auth.msg.login_success": "Inicio de sesión correcto.",
+          "user.hello": "Hola, {{name}}",
+          "user.active": "Cuenta activa"
+        },
+        pt: {
+          "lang.selector_aria": "Seletor de idioma",
+          "lang.option_en": "Inglês",
+          "lang.option_es": "Espanhol",
+          "lang.option_pt": "Português",
+          "nav.aria": "Navegacao principal",
+          "nav.features": "Funcionalidades",
+          "nav.how": "Como funciona",
+          "nav.price": "Preco",
+          "nav.testimonials": "Demo",
+          "cta.buy_now_top": "Comprar agora",
+          "auth.logout": "Sair",
+          "hero.pill": "Plugin para After Effects - ParaX Pro",
+          "hero.title": "Cenas cinematograficas<br><span class=\"t-purple\">em um clique</span>",
+          "hero.lead": "De arquivos PSD e AI em camadas para profundidade, foco e movimento de camera em segundos. ParaX Pro entrega um caminho mais rapido para cenas premium.",
+          "hero.cta_buy": "Comece a criar em segundos - Comprar ParaX Pro",
+          "hero.cta_demo": "Ver demonstracao",
+          "video.tag": "Preview real de workflow",
+          "video.title": "Veja cenas estaticas ganharem vida",
+          "video.desc": "Isso e o que faltava nas suas cenas: profundidade, movimento e foco cinematografico.",
+          "video.alt_preview": "Preview da demo do ParaX Pro",
+          "video.coming_soon": "Demo em breve",
+          "video.preview_caption": "Preview do produto",
+          "video.unsupported": "Seu navegador nao suporta reproducao de video HTML5.",
+          "video.play_aria": "Reproduzir video de demonstracao",
+          "video.play_btn": "Play",
+          "video.pause_btn": "Pausar",
+          "video.progress_aria": "Progresso do video",
+          "video.hint": "Preview real do workflow do ParaX Pro dentro do After Effects.",
+          "problem.tag": "Problema",
+          "problem.title": "O setup manual rouba tempo das suas melhores decisoes criativas.",
+          "problem.desc": "Criar rigs, ajustar camera, testar profundidade e refinar foco manualmente em cada projeto consome tempo e ritmo criativo.",
+          "problem.li1": "Tempo demais para montar a estrutura basica.",
+          "problem.li2": "Ajustes repetitivos para escalar layers corretamente.",
+          "problem.li3": "Menos tempo para direcao e acabamento final.",
+          "solution.tag": "Solucao",
+          "solution.title": "ParaX Pro transforma o setup tecnico em um passo de um clique.",
+          "solution.desc": "O plugin cria rigs de camera, organiza layers em 3D e aplica profundidade, foco e movimento com poucos cliques. Do sutil ao dramatico, voce escolhe o impacto.",
+          "solution.li1": "Menos setup e mais composicao criativa.",
+          "solution.li2": "Mais consistencia visual em todos os projetos.",
+          "solution.li3": "Entrega mais rapida sem perder qualidade premium.",
+          "benefits.tag": "Beneficios",
+          "benefits.title": "Tudo o que voce precisa para entregar motion cinematografico premium mais rapido.",
+          "benefits.desc": "Tudo abaixo ja faz parte do fluxo do ParaX Pro:",
+          "benefits.li1": "Criacao automatica de rig de camera",
+          "benefits.li2": "Profundidade real em segundos",
+          "benefits.li3": "Controle inteligente de foco",
+          "benefits.li4": "Escala automatica que se adapta a profundidade e distancia da camera",
+          "benefits.li5": "Sem expressoes complexas",
+          "benefits.li6": "Funciona com arquivos PSD e AI em camadas",
+          "showcase.tag": "Dentro do ParaX Pro",
+          "showcase.title": "Como funciona em projetos reais",
+          "showcase.lead": "Tres blocos-chave para um workflow mais rapido e limpo.",
+          "showcase.one.title": "Setup cinematografico em um clique",
+          "showcase.one.desc": "Transforme artes em camadas em uma cena 3D pronta para camera em segundos.",
+          "showcase.one.chip": "1-Clique",
+          "showcase.two.title": "AutoScale mantém proporcoes",
+          "showcase.two.desc": "Mova layers na profundidade sem perder equilibrio visual de escala.",
+          "showcase.two.chip": "AutoScale",
+          "showcase.three.title": "Rig de camera completo",
+          "showcase.three.desc": "Monte um rig de camera completo com controles prontos para movimentos cinematograficos.",
+          "showcase.three.chip": "Camera Rig",
+          "demo.tag": "Video antes/depois",
+          "demo.title": "Mostre a transformacao em segundos",
+          "demo.desc": "Espaco pronto para sua demo visual. Arraste o slider para ver o contraste.",
+          "demo.before": "Antes",
+          "demo.after": "Depois com ParaX Pro",
+          "demo.slider_aria": "Slider de antes e depois",
+          "demo.alt_before": "Antes",
+          "demo.alt_after": "Depois com ParaX Pro",
+          "compare.tag": "Comparacao",
+          "compare.title": "Manual vs com plugin",
+          "compare.manual_title": "Fluxo manual",
+          "compare.manual_li1": "Rig e camera montados do zero em cada cena.",
+          "compare.manual_li2": "Profundidade ajustada no tentativa e erro.",
+          "compare.manual_li3": "Maior risco de inconsistencias tecnicas.",
+          "compare.manual_li4": "Menos tempo para impacto visual.",
+          "compare.plugin_title": "Com ParaX Pro",
+          "compare.plugin_li1": "Rig criado automaticamente em segundos.",
+          "compare.plugin_li2": "Foco, profundidade e escala aplicados com logica inteligente.",
+          "compare.plugin_li3": "Workflow limpo e repetivel para qualquer projeto.",
+          "compare.plugin_li4": "Mais tempo para direcao criativa e resultado cinematografico.",
+          "final.badge": "ParaX Pro - Licenca vitalicia",
+          "final.price_currency": "$",
+          "final.price_value": "15",
+          "final.price_sub": "USD - Pagamento unico",
+          "final.price_old": "De $79",
+          "final.price_save": "Economize 75%",
+          "final.li1": "1 Click Cinema",
+          "final.li2": "Smart Depth",
+          "final.li3": "Auto Camera Motion",
+          "final.li4": "Auto Focus",
+          "final.li5": "50+ presets incluidos",
+          "final.li6": "Atualizacoes gratis",
+          "final.li7": "Suporte por email",
+          "final.li8": "Compativel AE 2022-2025",
+          "final.buy": "Comprar ParaX Pro",
+          "final.meta": "Download instantaneo - Garantia de 7 dias - Pagamento seguro",
+          "footer.text": "ParaX Pro - Plugin premium para profundidade cinematografica no After Effects.",
+          "pay.close": "Fechar",
+          "pay.kicker": "Parax Pro - $15",
+          "pay.tag": "Checkout seguro",
+          "pay.title": "Como deseja pagar?",
+          "pay.subtitle": "Selecione como voce quer finalizar sua compra.",
+          "pay.stripe_title": "Stripe",
+          "pay.stripe_desc": "Aprovacao rapida com cartoes internacionais.",
+          "pay.pix_title": "PIX",
+          "pay.pix_desc": "Aprovacao imediata com QR code.",
+          "pay.cancel": "Cancelar",
+          "pay.continue": "Continuar",
+          "auth.close": "Fechar",
+          "auth.tag": "Area do cliente",
+          "auth.title": "Entre ou crie sua conta",
+          "auth.tab_login": "Login",
+          "auth.tab_signup": "Cadastro",
+          "auth.email": "E-mail",
+          "auth.password": "Senha",
+          "auth.login_submit": "Entrar",
+          "auth.name": "Nome",
+          "auth.confirm_password": "Confirmar senha",
+          "auth.signup_submit": "Criar conta",
+          "auth.note": "As contas ficam salvas neste navegador (versao local da landing).",
+          "auth.msg.need_account": "Crie sua conta para continuar para a compra.",
+          "auth.msg.name_invalid": "Informe um nome valido.",
+          "auth.msg.email_invalid": "Informe um e-mail valido.",
+          "auth.msg.password_short": "A senha precisa ter pelo menos 6 caracteres.",
+          "auth.msg.password_mismatch": "As senhas nao conferem.",
+          "auth.msg.email_exists": "Este e-mail ja esta cadastrado.",
+          "auth.msg.signup_success": "Cadastro concluido com sucesso.",
+          "auth.msg.account_not_found": "Conta nao encontrada. Faca seu cadastro.",
+          "auth.msg.password_wrong": "Senha incorreta.",
+          "auth.msg.login_success": "Login realizado com sucesso.",
+          "user.hello": "Ola, {{name}}",
+          "user.active": "Conta ativa"
+        }
+      };
+
+      function interpolate(template, vars) {
+        var output = String(template || "");
+        if (!vars) return output;
+        Object.keys(vars).forEach(function (name) {
+          output = output.replace(new RegExp("{{\\s*" + name + "\\s*}}", "g"), String(vars[name]));
+        });
+        return output;
+      }
+
+      function getText(language, key, vars) {
+        var languagePack = translations[language] || {};
+        var fallbackPack = translations[defaultLanguage] || {};
+        var raw = languagePack[key];
+        if (typeof raw !== "string") {
+          raw = fallbackPack[key];
+        }
+        return interpolate(raw || key, vars);
+      }
+
+      function closeLanguageMenu() {
+        if (!languageDropdown || !languageTrigger) return;
+        languageDropdown.classList.remove("open");
+        languageTrigger.setAttribute("aria-expanded", "false");
+      }
+
+      function updateLanguagePicker(language) {
+        var languageCode = translations[language] ? language : defaultLanguage;
+        var meta = languageMeta[languageCode] || languageMeta[defaultLanguage];
+
+        if (languageCurrentLabel) {
+          languageCurrentLabel.textContent = getText(languageCode, meta.labelKey);
+        }
+
+        if (languageCurrentFlag) {
+          languageCurrentFlag.setAttribute("src", meta.flag);
+        }
+
+        languageOptions.forEach(function (option) {
+          var optionLang = option.getAttribute("data-lang-option");
+          var isSelected = optionLang === languageCode;
+          option.classList.toggle("active", isSelected);
+          option.setAttribute("aria-selected", isSelected ? "true" : "false");
+        });
+      }
+
+      function applyLanguage(language) {
+        var nextLanguage = translations[language] ? language : defaultLanguage;
+        currentLanguage = nextLanguage;
+
+        document.querySelectorAll("[data-i18n]").forEach(function (node) {
+          var key = node.getAttribute("data-i18n");
+          var text = getText(nextLanguage, key);
+          if (node.hasAttribute("data-i18n-html")) {
+            node.innerHTML = text;
+          } else {
+            node.textContent = text;
+          }
+        });
+
+        document.querySelectorAll("[data-i18n-aria-label]").forEach(function (node) {
+          var key = node.getAttribute("data-i18n-aria-label");
+          node.setAttribute("aria-label", getText(nextLanguage, key));
+        });
+
+        document.querySelectorAll("[data-i18n-alt]").forEach(function (node) {
+          var key = node.getAttribute("data-i18n-alt");
+          node.setAttribute("alt", getText(nextLanguage, key));
+        });
+
+        updateLanguagePicker(nextLanguage);
+        closeLanguageMenu();
+
+        localStorage.setItem(LANGUAGE_KEY, nextLanguage);
+        document.documentElement.lang = nextLanguage === "pt" ? "pt-BR" : nextLanguage;
+        document.dispatchEvent(new CustomEvent("parax:language-changed", { detail: { language: nextLanguage } }));
+      }
+
+      if (languageTrigger && languageDropdown && languageMenu) {
+        languageTrigger.addEventListener("click", function (event) {
+          event.stopPropagation();
+          var willOpen = !languageDropdown.classList.contains("open");
+          languageDropdown.classList.toggle("open", willOpen);
+          languageTrigger.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        });
+
+        languageMenu.addEventListener("click", function (event) {
+          event.stopPropagation();
+        });
+
+        languageOptions.forEach(function (option) {
+          option.addEventListener("click", function () {
+            var optionLanguage = option.getAttribute("data-lang-option");
+            applyLanguage(optionLanguage);
+          });
+        });
+
+        document.addEventListener("click", function (event) {
+          if (!languageDropdown.contains(event.target)) {
+            closeLanguageMenu();
+          }
+        });
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            closeLanguageMenu();
+          }
+        });
+      }
+
+      var savedLanguage = localStorage.getItem(LANGUAGE_KEY);
+      applyLanguage(savedLanguage || defaultLanguage);
+
+      window.ParaxI18n = {
+        getLanguage: function () {
+          return currentLanguage;
+        },
+        translate: function (key, vars) {
+          return getText(currentLanguage, key, vars);
+        },
+        applyLanguage: applyLanguage
+      };
+    })();
+
+    (function () {
+      var USERS_KEY = "parax_pro_users_v1";
+      var SESSION_KEY = "parax_pro_session_v1";
+      var authBackdrop = document.getElementById("authBackdrop");
+      var buyLinks = document.querySelectorAll(".js-buy-link");
+      var authCloseBtn = document.getElementById("authCloseBtn");
+      var tabLogin = document.getElementById("tabLogin");
+      var tabSignup = document.getElementById("tabSignup");
+      var loginForm = document.getElementById("loginForm");
+      var signupForm = document.getElementById("signupForm");
+      var authMessage = document.getElementById("authMessage");
+      var userChip = document.getElementById("userChip");
+      var userChipName = document.getElementById("userChipName");
+      var logoutBtn = document.getElementById("logoutBtn");
+      var paymentBackdrop = document.getElementById("paymentBackdrop");
+      var paymentCloseBtn = document.getElementById("paymentCloseBtn");
+      var paymentCancelBtn = document.getElementById("paymentCancelBtn");
+      var paymentContinueBtn = document.getElementById("paymentContinueBtn");
+      var paymentOptions = Array.prototype.slice.call(document.querySelectorAll("[data-pay-method]"));
+      var pendingCheckoutHref = "";
+      var selectedPaymentMethod = "stripe";
+
+      if (!authBackdrop || !loginForm || !signupForm) return;
+
+      function t(key, vars) {
+        if (window.ParaxI18n && typeof window.ParaxI18n.translate === "function") {
+          return window.ParaxI18n.translate(key, vars);
+        }
+        return key;
+      }
+
+      function normalizeEmail(value) {
+        return String(value || "").trim().toLowerCase();
+      }
+
+      function readUsers() {
+        try {
+          var raw = localStorage.getItem(USERS_KEY);
+          var data = JSON.parse(raw || "[]");
+          return Array.isArray(data) ? data : [];
+        } catch (err) {
+          return [];
+        }
+      }
+
+      function saveUsers(users) {
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      }
+
+      function getSessionEmail() {
+        return normalizeEmail(localStorage.getItem(SESSION_KEY));
+      }
+
+      function setSessionEmail(email) {
+        localStorage.setItem(SESSION_KEY, normalizeEmail(email));
+      }
+
+      function clearSession() {
+        localStorage.removeItem(SESSION_KEY);
+      }
+
+      function setMessage(text, type) {
+        authMessage.textContent = text || "";
+        authMessage.setAttribute("data-type", type || "");
+      }
+
+      function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+
+      function fallbackHash(input) {
+        var hash = 0;
+        var i;
+        for (i = 0; i < input.length; i += 1) {
+          hash = (hash << 5) - hash + input.charCodeAt(i);
+          hash |= 0;
+        }
+        return String(hash);
+      }
+
+      async function hashPassword(password) {
+        if (window.crypto && window.crypto.subtle && window.TextEncoder) {
+          var encoded = new TextEncoder().encode(password);
+          var digest = await window.crypto.subtle.digest("SHA-256", encoded);
+          return Array.from(new Uint8Array(digest)).map(function (value) {
+            return value.toString(16).padStart(2, "0");
+          }).join("");
+        }
+        return fallbackHash(password);
+      }
+
+      function switchTab(type) {
+        var loginActive = type === "login";
+        tabLogin.classList.toggle("active", loginActive);
+        tabSignup.classList.toggle("active", !loginActive);
+        loginForm.classList.toggle("active", loginActive);
+        signupForm.classList.toggle("active", !loginActive);
+        setMessage("", "");
+      }
+
+      function openModal(type) {
+        switchTab(type || "login");
+        authBackdrop.classList.add("show");
+        authBackdrop.setAttribute("aria-hidden", "false");
+      }
+
+      function closeModal() {
+        authBackdrop.classList.remove("show");
+        authBackdrop.setAttribute("aria-hidden", "true");
+        loginForm.reset();
+        signupForm.reset();
+        setMessage("", "");
+      }
+
+      function getPreferredPaymentMethodByLanguage() {
+        var currentLang = "en";
+        if (window.ParaxI18n && typeof window.ParaxI18n.getLanguage === "function") {
+          currentLang = window.ParaxI18n.getLanguage() || "en";
+        }
+        return currentLang === "pt" ? "pix" : "stripe";
+      }
+
+      function setPaymentMethod(method) {
+        var nextMethod = method || "stripe";
+        var hasMethod = paymentOptions.some(function (option) {
+          return option.getAttribute("data-pay-method") === nextMethod;
+        });
+        if (!hasMethod && paymentOptions.length) {
+          nextMethod = paymentOptions[0].getAttribute("data-pay-method") || "stripe";
+        }
+
+        selectedPaymentMethod = nextMethod;
+        paymentOptions.forEach(function (option) {
+          var optionMethod = option.getAttribute("data-pay-method");
+          option.classList.toggle("active", optionMethod === selectedPaymentMethod);
+        });
+      }
+
+      function openPaymentModal(checkoutHref) {
+        if (!paymentBackdrop) {
+          window.location.href = checkoutHref || "https://checkout.paraxpro.com";
+          return;
+        }
+        pendingCheckoutHref = checkoutHref || pendingCheckoutHref || "https://checkout.paraxpro.com";
+        setPaymentMethod(getPreferredPaymentMethodByLanguage());
+        paymentBackdrop.classList.add("show");
+        paymentBackdrop.setAttribute("aria-hidden", "false");
+      }
+
+      function closePaymentModal() {
+        if (!paymentBackdrop) return;
+        paymentBackdrop.classList.remove("show");
+        paymentBackdrop.setAttribute("aria-hidden", "true");
+      }
+
+      function buildCheckoutTarget(baseHref, method) {
+        var safeBase = baseHref || "https://checkout.paraxpro.com";
+        var safeMethod = method || "stripe";
+        try {
+          var url = new URL(safeBase, window.location.origin);
+          url.searchParams.set("method", safeMethod);
+          return url.href;
+        } catch (err) {
+          return safeBase;
+        }
+      }
+
+      function continueToCheckout() {
+        var target = buildCheckoutTarget(pendingCheckoutHref, selectedPaymentMethod);
+        pendingCheckoutHref = "";
+        closePaymentModal();
+        window.location.href = target;
+      }
+
+      function completePendingCheckout() {
+        if (!pendingCheckoutHref) return;
+        openPaymentModal(pendingCheckoutHref);
+      }
+
+      function findUserByEmail(email) {
+        var normalized = normalizeEmail(email);
+        return readUsers().find(function (user) {
+          return normalizeEmail(user.email) === normalized;
+        });
+      }
+
+      function compactDisplayName(name) {
+        var clean = String(name || "").trim().replace(/\s+/g, " ");
+        if (!clean) return "";
+
+        var parts = clean.split(" ");
+        var first = parts[0] || "";
+        var second = parts[1] || "";
+        var compact = first;
+
+        if (second && (first.length + second.length + 1) <= 16) {
+          compact = first + " " + second;
+        }
+
+        if (compact.length > 18) {
+          compact = compact.slice(0, 18).trim() + "...";
+        }
+
+        return compact;
+      }
+
+      function updateAuthUi() {
+        var currentEmail = getSessionEmail();
+        var user = currentEmail ? findUserByEmail(currentEmail) : null;
+        var isLogged = Boolean(user);
+
+        if (userChip) {
+          userChip.classList.toggle("show", isLogged);
+        }
+
+        if (isLogged) {
+          if (userChipName) {
+            var compactName = compactDisplayName(user.name);
+            userChipName.textContent = compactName ? t("user.hello", { name: compactName }) : t("user.active");
+            userChipName.title = user.name || "";
+          }
+        } else {
+          if (userChipName) {
+            userChipName.removeAttribute("title");
+          }
+          clearSession();
+        }
+      }
+
+      tabLogin.addEventListener("click", function () {
+        switchTab("login");
+      });
+
+      tabSignup.addEventListener("click", function () {
+        switchTab("signup");
+      });
+
+      buyLinks.forEach(function (link) {
+        link.addEventListener("click", function (event) {
+          var currentEmail = getSessionEmail();
+          var user = currentEmail ? findUserByEmail(currentEmail) : null;
+          var checkoutHref = link.getAttribute("href") || "https://checkout.paraxpro.com";
+
+          if (user) {
+            event.preventDefault();
+            openPaymentModal(checkoutHref);
+            return;
+          }
+
+          event.preventDefault();
+          pendingCheckoutHref = checkoutHref;
+          openModal("signup");
+          setMessage(t("auth.msg.need_account"), "");
+        });
+      });
+
+      authCloseBtn.addEventListener("click", closeModal);
+
+      authBackdrop.addEventListener("click", function (event) {
+        if (event.target === authBackdrop) {
+          closeModal();
+        }
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+        if (authBackdrop.classList.contains("show")) {
+          closeModal();
+        }
+        if (paymentBackdrop && paymentBackdrop.classList.contains("show")) {
+          closePaymentModal();
+        }
+      });
+
+      document.addEventListener("parax:language-changed", function () {
+        updateAuthUi();
+        setPaymentMethod(getPreferredPaymentMethodByLanguage());
+      });
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", function () {
+          pendingCheckoutHref = "";
+          closePaymentModal();
+          clearSession();
+          updateAuthUi();
+        });
+      }
+
+      if (paymentOptions.length) {
+        paymentOptions.forEach(function (option) {
+          option.addEventListener("click", function () {
+            setPaymentMethod(option.getAttribute("data-pay-method"));
+          });
+        });
+      }
+
+      if (paymentContinueBtn) {
+        paymentContinueBtn.addEventListener("click", continueToCheckout);
+      }
+
+      if (paymentCloseBtn) {
+        paymentCloseBtn.addEventListener("click", closePaymentModal);
+      }
+
+      if (paymentCancelBtn) {
+        paymentCancelBtn.addEventListener("click", closePaymentModal);
+      }
+
+      if (paymentBackdrop) {
+        paymentBackdrop.addEventListener("click", function (event) {
+          if (event.target === paymentBackdrop) {
+            closePaymentModal();
+          }
+        });
+      }
+
+      setPaymentMethod(getPreferredPaymentMethodByLanguage());
+
+      signupForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        setMessage("", "");
+
+        var name = String(document.getElementById("signupName").value || "").trim();
+        var email = normalizeEmail(document.getElementById("signupEmail").value);
+        var password = String(document.getElementById("signupPassword").value || "");
+        var passwordConfirm = String(document.getElementById("signupPasswordConfirm").value || "");
+
+        if (name.length < 2) {
+          setMessage(t("auth.msg.name_invalid"), "error");
+          return;
+        }
+
+        if (!isValidEmail(email)) {
+          setMessage(t("auth.msg.email_invalid"), "error");
+          return;
+        }
+
+        if (password.length < 6) {
+          setMessage(t("auth.msg.password_short"), "error");
+          return;
+        }
+
+        if (password !== passwordConfirm) {
+          setMessage(t("auth.msg.password_mismatch"), "error");
+          return;
+        }
+
+        var users = readUsers();
+        var exists = users.some(function (user) {
+          return normalizeEmail(user.email) === email;
+        });
+
+        if (exists) {
+          setMessage(t("auth.msg.email_exists"), "error");
+          return;
+        }
+
+        var passwordHash = await hashPassword(password);
+        users.push({
+          name: name,
+          email: email,
+          passwordHash: passwordHash,
+          createdAt: new Date().toISOString()
+        });
+        saveUsers(users);
+        setSessionEmail(email);
+        updateAuthUi();
+        setMessage(t("auth.msg.signup_success"), "success");
+        setTimeout(function () {
+          closeModal();
+          completePendingCheckout();
+        }, 550);
+      });
+
+      loginForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        setMessage("", "");
+
+        var email = normalizeEmail(document.getElementById("loginEmail").value);
+        var password = String(document.getElementById("loginPassword").value || "");
+
+        if (!isValidEmail(email)) {
+          setMessage(t("auth.msg.email_invalid"), "error");
+          return;
+        }
+
+        var user = findUserByEmail(email);
+        if (!user) {
+          setMessage(t("auth.msg.account_not_found"), "error");
+          return;
+        }
+
+        var passwordHash = await hashPassword(password);
+        if (passwordHash !== user.passwordHash) {
+          setMessage(t("auth.msg.password_wrong"), "error");
+          return;
+        }
+
+        setSessionEmail(email);
+        updateAuthUi();
+        setMessage(t("auth.msg.login_success"), "success");
+        setTimeout(function () {
+          closeModal();
+          completePendingCheckout();
+        }, 450);
+      });
+
+      updateAuthUi();
+    })();
+  </script>
+</body>
+</html>
