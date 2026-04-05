@@ -3510,7 +3510,6 @@
     (function () {
       var USERS_KEY = "parax_pro_users_v1";
       var SESSION_KEY = "parax_pro_session_v1";
-      var PURCHASE_OWNER_KEY = "parax_pro_purchase_owner_v1";
       var authBackdrop = document.getElementById("authBackdrop");
       var buyLinks = document.querySelectorAll(".js-buy-link");
       var authCloseBtn = document.getElementById("authCloseBtn");
@@ -3567,12 +3566,6 @@
 
       function clearSession() {
         localStorage.removeItem(SESSION_KEY);
-      }
-
-      function markPurchaseOwnerFromSession() {
-        var currentEmail = getSessionEmail();
-        if (!currentEmail) return;
-        localStorage.setItem(PURCHASE_OWNER_KEY, currentEmail);
       }
 
       function setMessage(text, type) {
@@ -3669,27 +3662,13 @@
         paymentBackdrop.setAttribute("aria-hidden", "true");
       }
 
-      async function createStripeCheckout(email) {
-        var response = await fetch("/api/create-stripe-checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email })
-        });
-
-        var result = await response.json().catch(function () {
-          return {};
-        });
-
-        if (!response.ok || !result.url) {
-          throw new Error(result.error || "Unable to start Stripe checkout.");
-        }
-
-        return result.url;
-      }
-
       function buildCheckoutTarget(baseHref, method) {
         var safeBase = baseHref || "https://checkout.paraxpro.com";
         var safeMethod = method || "stripe";
+
+        if (safeMethod === "stripe") {
+          return "https://buy.stripe.com/8x23cxfpp8am779eOv2Ji00";
+        }
 
         try {
           var url = new URL(safeBase, window.location.origin);
@@ -3700,40 +3679,11 @@
         }
       }
 
-      async function continueToCheckout() {
-        var originalButtonLabel = paymentContinueBtn ? paymentContinueBtn.textContent : "";
-        if (paymentContinueBtn) {
-          paymentContinueBtn.disabled = true;
-          paymentContinueBtn.textContent = "Loading...";
-        }
-
-        markPurchaseOwnerFromSession();
-        try {
-          var target;
-          if (selectedPaymentMethod === "stripe") {
-            var sessionEmail = getSessionEmail();
-            if (!sessionEmail) {
-              closePaymentModal();
-              openModal("login");
-              setMessage(t("auth.msg.need_account"), "");
-              return;
-            }
-            target = await createStripeCheckout(sessionEmail);
-          } else {
-            target = buildCheckoutTarget(pendingCheckoutHref, selectedPaymentMethod);
-          }
-
-          pendingCheckoutHref = "";
-          closePaymentModal();
-          window.location.href = target;
-        } catch (error) {
-          alert(error && error.message ? error.message : "Unable to continue to checkout.");
-        } finally {
-          if (paymentContinueBtn) {
-            paymentContinueBtn.disabled = false;
-            paymentContinueBtn.textContent = originalButtonLabel || "Continue";
-          }
-        }
+      function continueToCheckout() {
+        var target = buildCheckoutTarget(pendingCheckoutHref, selectedPaymentMethod);
+        pendingCheckoutHref = "";
+        closePaymentModal();
+        window.location.href = target;
       }
 
       function completePendingCheckout() {
