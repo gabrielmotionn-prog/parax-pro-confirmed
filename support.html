@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parax Pro | Contact Support</title>
+  <meta name="description" content="Contact support for Parax Pro.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #05030d;
+      --panel: rgba(12, 8, 24, 0.92);
+      --line: rgba(124, 58, 237, 0.35);
+      --line-soft: rgba(124, 58, 237, 0.22);
+      --text: #f7f5ff;
+      --muted: #b2aacd;
+      --ok: #86efac;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100dvh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Plus Jakarta Sans", sans-serif;
+    }
+
+    body {
+      background-image:
+        radial-gradient(circle at 14% 10%, rgba(124, 58, 237, 0.34), transparent 34%),
+        radial-gradient(circle at 90% 0%, rgba(37, 99, 235, 0.26), transparent 26%),
+        radial-gradient(circle at 50% 90%, rgba(124, 58, 237, 0.22), transparent 38%),
+        linear-gradient(180deg, #05030d, #090513);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(100px);
+      z-index: 0;
+      opacity: 0.28;
+    }
+
+    body::before {
+      top: -180px;
+      left: -170px;
+      background: #7c3aed;
+    }
+
+    body::after {
+      bottom: -210px;
+      right: -160px;
+      background: #2563eb;
+    }
+
+    .wrap {
+      width: min(1060px, 100%);
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: linear-gradient(180deg, var(--panel), rgba(8, 5, 15, 0.95));
+      box-shadow:
+        0 36px 95px rgba(3, 2, 10, 0.8),
+        0 0 0 1px rgba(167, 139, 250, 0.12) inset;
+      padding: clamp(22px, 4vw, 40px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 56px 56px;
+      opacity: 0.22;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: clamp(18px, 4vw, 44px);
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .support-copy {
+      max-width: 46ch;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(1.9rem, 4.5vw, 3rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: clamp(1rem, 2.2vw, 1.08rem);
+      max-width: 58ch;
+    }
+
+    .form {
+      border: 1px solid var(--line-soft);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(20, 12, 38, 0.82), rgba(11, 7, 21, 0.9));
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field label {
+      font-size: 0.86rem;
+      color: #d7cfff;
+      font-weight: 600;
+    }
+
+    .field input,
+    .field textarea {
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      background: rgba(8, 5, 16, 0.9);
+      color: #f8f7ff;
+      padding: 12px 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: 0.2s ease;
+      width: 100%;
+    }
+
+    .field textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      border-color: rgba(167, 139, 250, 0.8);
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.18);
+    }
+
+    .actions {
+      margin-top: 4px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 0.94rem;
+      font-weight: 700;
+      text-decoration: none;
+      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      color: #fff;
+      border-color: rgba(167, 139, 250, 0.82);
+      background: linear-gradient(90deg, #6d28d9, #2563eb);
+      box-shadow: 0 14px 30px rgba(109, 40, 217, 0.38);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.07);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.72;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+      box-shadow: none;
+    }
+
+    .btn-ghost {
+      color: #ddd6fe;
+      border-color: var(--line);
+      background: rgba(109, 40, 217, 0.14);
+    }
+
+    .btn-ghost:hover {
+      border-color: rgba(167, 139, 250, 0.74);
+      background: rgba(109, 40, 217, 0.24);
+    }
+
+    .feedback {
+      margin-top: 14px;
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 0.93rem;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .feedback[data-type="success"] {
+      border: 1px solid rgba(134, 239, 172, 0.42);
+      background: rgba(20, 83, 45, 0.22);
+      color: var(--ok);
+    }
+
+    .feedback[data-type="error"] {
+      border: 1px solid rgba(251, 113, 133, 0.42);
+      background: rgba(127, 29, 29, 0.24);
+      color: #fecdd3;
+    }
+
+    .feedback[hidden] {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .support-copy {
+        max-width: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .panel {
+        border-radius: 22px;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="panel">
+      <div class="content">
+        <div class="support-copy">
+          <h1>Contact Support</h1>
+          <p class="subtitle">Tell us what you need and we&rsquo;ll help you as soon as possible.</p>
+        </div>
+
+        <div>
+          <form class="form" id="supportForm">
+            <div class="field">
+              <label for="supportEmail">Email</label>
+              <input id="supportEmail" name="email" type="email" required>
+            </div>
+
+            <div class="field">
+              <label for="supportMessage">Message</label>
+              <textarea id="supportMessage" name="message" placeholder="Describe your issue..." required></textarea>
+            </div>
+
+            <div class="actions">
+              <a class="btn btn-ghost" href="confirmed.html">Back</a>
+              <button class="btn btn-primary" id="supportSubmitBtn" type="submit">Send Message</button>
+            </div>
+          </form>
+
+          <p class="feedback" id="supportFeedback" data-type="" hidden></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var form = document.getElementById("supportForm");
+      var feedback = document.getElementById("supportFeedback");
+      var submitBtn = document.getElementById("supportSubmitBtn");
+      if (!form || !feedback || !submitBtn) return;
+
+      function setFeedback(message, type) {
+        feedback.textContent = message || "";
+        feedback.setAttribute("data-type", type || "");
+        feedback.hidden = !message;
+      }
+
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        setFeedback("", "");
+
+        var emailField = document.getElementById("supportEmail");
+        var messageField = document.getElementById("supportMessage");
+        var fromEmail = String((emailField && emailField.value) || "").trim();
+        var messageText = String((messageField && messageField.value) || "").trim();
+
+        if (!fromEmail || !messageText) return;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending...";
+
+        try {
+          var response = await fetch("/api/support", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: fromEmail,
+              message: messageText
+            })
+          });
+
+          var result = await response.json().catch(function () { return {}; });
+
+          if (!response.ok) {
+            throw new Error(result.error || "Unable to send your message right now.");
+          }
+
+          form.reset();
+          setFeedback("Your message has been sent. We will contact you soon.", "success");
+        } catch (error) {
+          setFeedback(error.message || "Unable to send your message right now.", "error");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Send Message";
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
