@@ -3510,6 +3510,7 @@
     (function () {
       var USERS_KEY = "parax_pro_users_v1";
       var SESSION_KEY = "parax_pro_session_v1";
+      var PURCHASE_OWNER_KEY = "parax_pro_purchase_owner_v1";
       var authBackdrop = document.getElementById("authBackdrop");
       var buyLinks = document.querySelectorAll(".js-buy-link");
       var authCloseBtn = document.getElementById("authCloseBtn");
@@ -3566,6 +3567,12 @@
 
       function clearSession() {
         localStorage.removeItem(SESSION_KEY);
+      }
+
+      function markPurchaseOwnerFromSession() {
+        var currentEmail = getSessionEmail();
+        if (!currentEmail) return;
+        localStorage.setItem(PURCHASE_OWNER_KEY, currentEmail);
       }
 
       function setMessage(text, type) {
@@ -3680,6 +3687,7 @@
       }
 
       function continueToCheckout() {
+        markPurchaseOwnerFromSession();
         var target = buildCheckoutTarget(pendingCheckoutHref, selectedPaymentMethod);
         pendingCheckoutHref = "";
         closePaymentModal();

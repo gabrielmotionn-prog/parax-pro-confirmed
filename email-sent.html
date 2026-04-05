@@ -1,10 +1,10 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Parax Pro | Payment Confirmed</title>
-  <meta name="description" content="Payment confirmation for Parax Pro. Access instructions will be sent to your email shortly.">
+  <title>Parax Pro | Email Sent</title>
+  <meta name="description" content="Parax Pro access instructions email sent successfully.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,7 +16,6 @@
       --line-soft: rgba(124, 58, 237, 0.2);
       --text: #f7f5ff;
       --muted: #b2aacd;
-      --violet: #7c3aed;
       --purple: #a855f7;
       --blue: #2563eb;
       --ok: #22c55e;
@@ -90,6 +89,7 @@
       padding: clamp(24px, 4vw, 40px);
       overflow: hidden;
       position: relative;
+      text-align: center;
     }
 
     .panel::before {
@@ -102,6 +102,11 @@
         linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
       background-size: 56px 56px;
       opacity: 0.22;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
     }
 
     .badge {
@@ -117,8 +122,6 @@
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      position: relative;
-      z-index: 1;
     }
 
     .badge::before {
@@ -134,80 +137,30 @@
       margin: 16px 0 10px;
       font-family: "Space Grotesk", sans-serif;
       font-weight: 700;
-      font-size: clamp(1.9rem, 4.5vw, 3rem);
-      line-height: 1.03;
+      font-size: clamp(1.85rem, 4.5vw, 2.8rem);
+      line-height: 1.05;
       letter-spacing: -0.03em;
-      position: relative;
-      z-index: 1;
     }
 
-    .subtitle {
-      margin: 0;
+    .lead {
+      margin: 0 auto;
       color: var(--muted);
-      font-size: clamp(1rem, 2.3vw, 1.14rem);
+      font-size: clamp(1rem, 2.2vw, 1.1rem);
       line-height: 1.62;
-      max-width: 60ch;
-      position: relative;
-      z-index: 1;
+      max-width: 56ch;
     }
 
-    .steps {
-      margin: 24px 0 0;
-      border: 1px solid var(--line-soft);
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(20, 12, 38, 0.82), rgba(11, 7, 21, 0.9));
-      padding: 16px;
-      list-style: none;
-      display: grid;
-      gap: 10px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .steps li {
-      border: 1px solid rgba(124, 58, 237, 0.24);
-      border-radius: 12px;
-      padding: 12px 12px 12px 44px;
-      background: rgba(11, 8, 21, 0.72);
-      font-weight: 600;
-      color: #e9e5fb;
-      line-height: 1.45;
-      position: relative;
-    }
-
-    .steps li::before {
-      content: "\2713";
-      position: absolute;
-      top: 50%;
-      left: 14px;
-      transform: translateY(-50%);
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      color: #fff;
-      font-size: 0.73rem;
-      font-weight: 800;
-      background: linear-gradient(140deg, var(--purple), var(--blue));
-      box-shadow: 0 0 14px rgba(124, 58, 237, 0.55);
-    }
-
-    .primary-note {
-      margin: 18px 0 0;
+    .note {
+      margin: 16px 0 0;
       color: #ddd6fe;
       font-weight: 600;
-      position: relative;
-      z-index: 1;
     }
 
-    .support-note {
+    .subnote {
       margin: 8px 0 0;
       color: #a89ec5;
       font-size: 0.92rem;
       line-height: 1.55;
-      position: relative;
-      z-index: 1;
     }
 
     .actions {
@@ -215,8 +168,6 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
-      position: relative;
-      z-index: 1;
     }
 
     .btn {
@@ -270,27 +221,21 @@
 </head>
 <body class="guard-pending">
   <main class="wrap">
-    <section class="panel" aria-labelledby="confirmedTitle">
-      <p class="badge">Payment confirmed</p>
-      <h1 id="confirmedTitle">Your purchase was successful</h1>
-      <p class="subtitle">Thank you for getting Parax Pro. Your access instructions will be sent to your email shortly.</p>
+    <section class="panel" aria-labelledby="emailSentTitle">
+      <div class="content">
+        <p class="badge">Email sent</p>
+        <h1 id="emailSentTitle">Parax Pro was sent successfully</h1>
+        <p class="lead">Your access instructions have been sent to your email. You should receive them in a few moments.</p>
+        <p class="note">Please check your inbox and spam folder.</p>
+        <p class="subnote">If you still don&rsquo;t receive the email, contact support and we&rsquo;ll help you right away.</p>
 
-      <ol class="steps">
-        <li>Payment received</li>
-        <li>Access being prepared</li>
-        <li>Download instructions sent by email</li>
-      </ol>
-
-      <p class="primary-note">Please check your inbox and spam folder.</p>
-      <p class="support-note">If you don&rsquo;t receive the email within a few minutes, contact support.</p>
-
-      <div class="actions">
-        <a class="btn btn-primary" href="email-sent.html">Receive Parax Pro by email</a>
-        <a class="btn btn-ghost" href="support.html">Contact support</a>
+        <div class="actions">
+          <a class="btn btn-primary" href="index.html">Back to homepage</a>
+          <a class="btn btn-ghost" href="support.html">Contact support</a>
+        </div>
       </div>
     </section>
   </main>
   <script src="access-guard.js"></script>
 </body>
 </html>
-
