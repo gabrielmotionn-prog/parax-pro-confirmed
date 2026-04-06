@@ -164,10 +164,9 @@
     }
 
     .actions {
-      margin-top: 22px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      margin-top: 24px;
+      display: flex;
+      justify-content: center;
     }
 
     .btn {
@@ -197,6 +196,14 @@
       filter: brightness(1.07);
     }
 
+    .btn:disabled {
+      opacity: 0.64;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+      box-shadow: none;
+    }
+
     .btn-ghost {
       color: #ddd6fe;
       border-color: var(--line);
@@ -208,13 +215,50 @@
       background: rgba(109, 40, 217, 0.24);
     }
 
-    @media (max-width: 640px) {
-      .actions {
-        grid-template-columns: 1fr;
-      }
+    .key-box {
+      margin-top: 18px;
+      border: 1px solid rgba(167, 139, 250, 0.34);
+      border-radius: 14px;
+      background: rgba(14, 10, 28, 0.84);
+      padding: 14px 16px;
+      display: none;
+    }
 
+    .key-box.show {
+      display: block;
+    }
+
+    .key-label {
+      margin: 0 0 8px;
+      color: #c4b5fd;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .key-value {
+      margin: 0;
+      color: #f5f3ff;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(1rem, 3vw, 1.25rem);
+      letter-spacing: 0.08em;
+      word-break: break-word;
+    }
+
+    .key-hint {
+      margin: 10px 0 0;
+      color: #a89ec5;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 640px) {
       .panel {
         border-radius: 22px;
+      }
+
+      .actions .btn {
+        width: 100%;
       }
     }
   </style>
@@ -230,11 +274,100 @@
         <p class="subnote">If you still don&rsquo;t receive the email, contact support and we&rsquo;ll help you right away.</p>
 
         <div class="actions">
-          <a class="btn btn-primary" href="index.html">Back to homepage</a>
-          <a class="btn btn-ghost" href="support.html">Contact support</a>
+          <button id="generateKeyBtn" class="btn btn-primary" type="button">Generate Access Key</button>
+        </div>
+        <div id="keyBox" class="key-box" aria-live="polite">
+          <p class="key-label">Your Plugin Access Key</p>
+          <p id="keyValue" class="key-value"></p>
+          <p id="keyHint" class="key-hint">Click to generate your real license key from this purchase.</p>
         </div>
       </div>
     </section>
   </main>
+  <script>
+    (function () {
+      const STORAGE_KEY = "paraxProLicenseKey";
+      const generateBtn = document.getElementById("generateKeyBtn");
+      const keyBox = document.getElementById("keyBox");
+      const keyValue = document.getElementById("keyValue");
+      const keyHint = document.getElementById("keyHint");
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = String(params.get("session_id") || "").trim();
+
+      function showKey(key) {
+        keyValue.textContent = key;
+        keyBox.classList.add("show");
+      }
+
+      async function copyKeyToClipboard(key) {
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          keyHint.textContent = "Access key generated. Copy it and keep it safe.";
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(key);
+          keyHint.textContent = "Access key generated and copied. Keep it safe.";
+        } catch (error) {
+          keyHint.textContent = "Access key generated. Copy it and keep it safe.";
+        }
+      }
+
+      generateBtn.addEventListener("click", async function () {
+        if (!sessionId) {
+          keyBox.classList.add("show");
+          keyValue.textContent = "Session ID not found";
+          keyHint.textContent = "Open this page from the payment success link (with session_id).";
+          return;
+        }
+
+        generateBtn.disabled = true;
+        const previousLabel = generateBtn.textContent;
+        generateBtn.textContent = "Generating...";
+
+        try {
+          const response = await fetch("/api/generate-key", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              session_id: sessionId
+            })
+          });
+
+          const data = await response.json().catch(function () {
+            return {};
+          });
+
+          if (!response.ok) {
+            throw new Error(data.error || "Unable to generate your license key.");
+          }
+
+          const key = data && data.license && data.license.license_key;
+          if (!key) {
+            throw new Error("License key not returned by server.");
+          }
+
+          localStorage.setItem(STORAGE_KEY, key);
+          showKey(key);
+          await copyKeyToClipboard(key);
+          generateBtn.textContent = data.reused ? "Key Loaded" : "Key Generated";
+        } catch (error) {
+          keyBox.classList.add("show");
+          keyValue.textContent = "Generation failed";
+          keyHint.textContent = error.message || "Unable to generate your key right now.";
+          generateBtn.textContent = previousLabel;
+        } finally {
+          generateBtn.disabled = false;
+        }
+      });
+
+      const existingKey = localStorage.getItem(STORAGE_KEY);
+      if (existingKey) {
+        showKey(existingKey);
+        keyHint.textContent = "A previously generated key is saved in this browser.";
+      }
+    })();
+  </script>
 </body>
 </html>
