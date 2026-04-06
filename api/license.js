@@ -279,11 +279,17 @@ function handleCheck(body, res) {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.method !== "POST") {
-    return methodNotAllowed(res, "POST");
+  if (req.method !== "POST" && req.method !== "GET") {
+    return methodNotAllowed(res, "GET, POST");
   }
 
-  const body = readJsonBody(req);
+  let body = {};
+  if (req.method === "POST") {
+    body = readJsonBody(req);
+  } else {
+    body = req.query || {};
+  }
+
   const action = String(body.action || "").trim().toLowerCase();
 
   if (action === "generate") {
@@ -300,4 +306,3 @@ module.exports = async function handler(req, res) {
     error: "Invalid action. Use: generate, activate, or check."
   });
 };
-
