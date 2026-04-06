@@ -325,12 +325,13 @@
         generateBtn.textContent = "Generating...";
 
         try {
-          const response = await fetch("/api/generate-key", {
+          const response = await fetch("/api/license", {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
             },
             body: JSON.stringify({
+              action: "generate",
               session_id: sessionId
             })
           });
