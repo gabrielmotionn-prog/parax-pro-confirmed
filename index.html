@@ -2750,7 +2750,7 @@
           <span class="pay-option-icon" aria-hidden="true">⚡</span>
           <span class="pay-option-copy">
             <h4 data-i18n="pay.pix_title">PIX</h4>
-            <p data-i18n="pay.pix_desc">Instant approval with QR code.</p>
+            <p data-i18n="pay.pix_desc">Pay via PIX and receive your key by email after confirmation.</p>
           </span>
           <span class="pay-option-arrow" aria-hidden="true">›</span>
         </button>
@@ -3084,7 +3084,7 @@
           "pay.stripe_title": "Stripe",
           "pay.stripe_desc": "Fast approval with international cards.",
           "pay.pix_title": "PIX",
-          "pay.pix_desc": "Instant approval with QR code.",
+          "pay.pix_desc": "Pay via PIX and receive your key by email after confirmation.",
           "pay.cancel": "Cancel",
           "pay.continue": "Continue",
           "auth.close": "Close",
@@ -3219,7 +3219,7 @@
           "pay.stripe_title": "Stripe",
           "pay.stripe_desc": "Aprobacion rapida con tarjetas internacionales.",
           "pay.pix_title": "PIX",
-          "pay.pix_desc": "Aprobacion instantanea con codigo QR.",
+          "pay.pix_desc": "Paga por PIX y recibe tu clave por correo tras la confirmacion.",
           "pay.cancel": "Cancelar",
           "pay.continue": "Continuar",
           "auth.close": "Cerrar",
@@ -3354,7 +3354,7 @@
           "pay.stripe_title": "Stripe",
           "pay.stripe_desc": "Aprovacao rapida com cartoes internacionais.",
           "pay.pix_title": "PIX",
-          "pay.pix_desc": "Aprovacao imediata com QR code.",
+          "pay.pix_desc": "Pague por PIX e receba sua chave por e-mail apos a confirmacao.",
           "pay.cancel": "Cancelar",
           "pay.continue": "Continuar",
           "auth.close": "Fechar",
@@ -3528,6 +3528,11 @@
       var paymentOptions = Array.prototype.slice.call(document.querySelectorAll("[data-pay-method]"));
       var pendingCheckoutHref = "";
       var selectedPaymentMethod = "stripe";
+      var STRIPE_CHECKOUT_URL = "https://buy.stripe.com/3cI9AV4KL2Q21MP0XF2Ji02";
+      // Optional: paste a dedicated Stripe PIX payment link here.
+      // If empty, PIX will use Mercado Pago auto-checkout endpoint.
+      var PIX_CHECKOUT_URL = "";
+      var MERCADOPAGO_CHECKOUT_ENDPOINT = "/api/mercadopago-checkout";
 
       if (!authBackdrop || !loginForm || !signupForm) return;
 
@@ -3667,7 +3672,14 @@
         var safeMethod = method || "stripe";
 
         if (safeMethod === "stripe") {
-          return "https://buy.stripe.com/3cI9AV4KL2Q21MP0XF2Ji02";
+          return STRIPE_CHECKOUT_URL;
+        }
+
+        if (safeMethod === "pix") {
+          if (PIX_CHECKOUT_URL && /^https?:\/\//i.test(PIX_CHECKOUT_URL)) {
+            return PIX_CHECKOUT_URL;
+          }
+          return MERCADOPAGO_CHECKOUT_ENDPOINT;
         }
 
         try {
@@ -3679,10 +3691,39 @@
         }
       }
 
-      function continueToCheckout() {
+      async function continueToCheckout() {
         var target = buildCheckoutTarget(pendingCheckoutHref, selectedPaymentMethod);
         pendingCheckoutHref = "";
         closePaymentModal();
+
+        if (selectedPaymentMethod === "pix" && target === MERCADOPAGO_CHECKOUT_ENDPOINT) {
+          try {
+            var response = await fetch(MERCADOPAGO_CHECKOUT_ENDPOINT, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                email: getSessionEmail()
+              })
+            });
+
+            var payload = await response.json().catch(function () {
+              return {};
+            });
+
+            if (!response.ok || !payload.checkout_url) {
+              throw new Error(payload.error || "PIX checkout is not available right now.");
+            }
+
+            window.location.href = payload.checkout_url;
+            return;
+          } catch (error) {
+            alert(error.message || "PIX checkout is not available right now.");
+            return;
+          }
+        }
+
         window.location.href = target;
       }
 

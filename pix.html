@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parax Pro | PIX Checkout</title>
+  <meta name="description" content="Confirm your PIX payment and receive your Parax Pro key by email.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #05030d;
+      --panel: rgba(12, 8, 24, 0.92);
+      --line: rgba(124, 58, 237, 0.36);
+      --text: #f7f5ff;
+      --muted: #b2aacd;
+      --purple: #a855f7;
+      --blue: #2563eb;
+      --ok: #22c55e;
+      --danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100dvh; }
+    body {
+      font-family: "Plus Jakarta Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 10%, rgba(124, 58, 237, 0.32), transparent 32%),
+        radial-gradient(circle at 90% 0%, rgba(37, 99, 235, 0.26), transparent 28%),
+        linear-gradient(180deg, #05030d, #090513);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(760px, 100%);
+      border-radius: 26px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--panel), rgba(8, 5, 15, 0.95));
+      box-shadow:
+        0 38px 95px rgba(3, 2, 10, 0.8),
+        0 0 0 1px rgba(167, 139, 250, 0.12) inset;
+      padding: clamp(22px, 4vw, 38px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 56px 56px;
+      opacity: 0.2;
+      pointer-events: none;
+    }
+
+    .content { position: relative; z-index: 1; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(167, 139, 250, 0.7);
+      background: rgba(109, 40, 217, 0.2);
+      color: #e9ddff;
+      padding: 8px 14px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .badge::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #a855f7;
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.8);
+    }
+
+    h1 {
+      margin: 16px 0 8px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(1.7rem, 4vw, 2.4rem);
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .pix-box {
+      border: 1px solid rgba(99, 102, 241, 0.34);
+      border-radius: 14px;
+      background: rgba(15, 12, 26, 0.84);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .pix-line {
+      margin: 0;
+      color: #ddd6fe;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #d8cff9;
+      font-size: 0.92rem;
+    }
+
+    .field input,
+    .field textarea {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(124, 58, 237, 0.38);
+      background: rgba(7, 5, 15, 0.9);
+      color: #fff;
+      padding: 12px 13px;
+      font: inherit;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font: 700 0.95rem "Space Grotesk", sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: .2s ease;
+    }
+
+    .btn-main {
+      color: #fff;
+      background: linear-gradient(90deg, #6d28d9, #2563eb);
+      border-color: rgba(167, 139, 250, 0.86);
+      box-shadow: 0 14px 34px rgba(109, 40, 217, 0.36);
+    }
+
+    .btn-main:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .btn-main:disabled { opacity: .65; cursor: not-allowed; transform: none; filter: none; box-shadow: none; }
+
+    .btn-ghost {
+      color: #ded6ff;
+      border-color: var(--line);
+      background: rgba(109, 40, 217, 0.12);
+    }
+
+    .status {
+      margin-top: 14px;
+      min-height: 24px;
+      font-size: 0.94rem;
+      line-height: 1.4;
+      color: #d3c8f7;
+    }
+
+    .status.ok { color: #bbf7d0; }
+    .status.error { color: #fecaca; }
+
+    @media (max-width: 680px) {
+      .actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="content">
+      <p class="badge" id="badgeText">PIX payment flow</p>
+      <h1 id="titleText">Confirm your PIX payment</h1>
+      <p class="subtitle" id="subtitleText">Send your PIX transaction data below. After confirmation, your Parax Pro access key is sent by email.</p>
+
+      <section class="pix-box">
+        <p class="pix-line" id="pixInfoText"><strong>PIX key:</strong> configure your PIX key or QR instructions here.</p>
+      </section>
+
+      <form id="pixForm" novalidate>
+        <div class="field">
+          <label for="pixEmail" id="labelEmail">Email</label>
+          <input id="pixEmail" type="email" required>
+        </div>
+        <div class="field">
+          <label for="pixName" id="labelName">Full name (optional)</label>
+          <input id="pixName" type="text">
+        </div>
+        <div class="field">
+          <label for="pixTxid" id="labelTxid">PIX txid / transaction code</label>
+          <input id="pixTxid" type="text" required>
+        </div>
+        <div class="field">
+          <label for="pixAmount" id="labelAmount">Amount paid (optional)</label>
+          <input id="pixAmount" type="text" placeholder="$15.00">
+        </div>
+        <div class="field">
+          <label for="pixNote" id="labelNote">Note (optional)</label>
+          <textarea id="pixNote" rows="3" placeholder="Any extra detail about your payment"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-main" type="submit" id="submitBtn">Send PIX proof</button>
+          <a class="btn btn-ghost" href="/index.html" id="backBtn">Back to homepage</a>
+        </div>
+      </form>
+
+      <p id="status" class="status" aria-live="polite"></p>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var LANGUAGE_KEY = "parax_pro_lang_v1";
+      var form = document.getElementById("pixForm");
+      var submitBtn = document.getElementById("submitBtn");
+      var statusEl = document.getElementById("status");
+      var emailEl = document.getElementById("pixEmail");
+      var nameEl = document.getElementById("pixName");
+      var txidEl = document.getElementById("pixTxid");
+      var amountEl = document.getElementById("pixAmount");
+      var noteEl = document.getElementById("pixNote");
+
+      var texts = {
+        en: {
+          badge: "PIX payment flow",
+          title: "Confirm your PIX payment",
+          subtitle: "Send your PIX transaction data below. After confirmation, your Parax Pro access key is sent by email.",
+          pixInfo: "<strong>PIX key:</strong> configure your PIX key or QR instructions here.",
+          email: "Email",
+          name: "Full name (optional)",
+          txid: "PIX txid / transaction code",
+          amount: "Amount paid (optional)",
+          note: "Note (optional)",
+          notePh: "Any extra detail about your payment",
+          send: "Send PIX proof",
+          back: "Back to homepage",
+          sending: "Sending...",
+          ok: "Payment proof sent successfully. Request ID: {{id}}. We will confirm and send your key by email.",
+          err: "Unable to send PIX proof right now."
+        },
+        es: {
+          badge: "Flujo de pago PIX",
+          title: "Confirma tu pago por PIX",
+          subtitle: "Envía los datos de tu transacción PIX. Tras la confirmación, tu clave de Parax Pro se envía por correo.",
+          pixInfo: "<strong>Clave PIX:</strong> configura aquí tu clave PIX o instrucciones de QR.",
+          email: "Correo",
+          name: "Nombre completo (opcional)",
+          txid: "TXID / código de transacción PIX",
+          amount: "Importe pagado (opcional)",
+          note: "Nota (opcional)",
+          notePh: "Cualquier detalle extra sobre tu pago",
+          send: "Enviar comprobante PIX",
+          back: "Volver al inicio",
+          sending: "Enviando...",
+          ok: "Comprobante enviado. ID de solicitud: {{id}}. Confirmaremos y enviaremos tu clave por correo.",
+          err: "No se pudo enviar el comprobante PIX ahora."
+        },
+        pt: {
+          badge: "Fluxo de pagamento PIX",
+          title: "Confirme seu pagamento via PIX",
+          subtitle: "Envie os dados da sua transacao PIX. Apos a confirmacao, sua chave do Parax Pro sera enviada por e-mail.",
+          pixInfo: "<strong>Chave PIX:</strong> configure aqui sua chave PIX ou instrucoes de QR code.",
+          email: "E-mail",
+          name: "Nome completo (opcional)",
+          txid: "TXID / codigo da transacao PIX",
+          amount: "Valor pago (opcional)",
+          note: "Observacao (opcional)",
+          notePh: "Qualquer detalhe extra sobre seu pagamento",
+          send: "Enviar comprovante PIX",
+          back: "Voltar para home",
+          sending: "Enviando...",
+          ok: "Comprovante enviado com sucesso. ID: {{id}}. Vamos confirmar e enviar sua chave por e-mail.",
+          err: "Nao foi possivel enviar o comprovante PIX agora."
+        }
+      };
+
+      function currentLanguage() {
+        var saved = String(localStorage.getItem(LANGUAGE_KEY) || "en").toLowerCase();
+        return texts[saved] ? saved : "en";
+      }
+
+      function t(key) {
+        var lang = currentLanguage();
+        return (texts[lang] && texts[lang][key]) || texts.en[key] || key;
+      }
+
+      function applyI18n() {
+        document.documentElement.lang = currentLanguage() === "pt" ? "pt-BR" : currentLanguage();
+        document.getElementById("badgeText").textContent = t("badge");
+        document.getElementById("titleText").textContent = t("title");
+        document.getElementById("subtitleText").textContent = t("subtitle");
+        document.getElementById("pixInfoText").innerHTML = t("pixInfo");
+        document.getElementById("labelEmail").textContent = t("email");
+        document.getElementById("labelName").textContent = t("name");
+        document.getElementById("labelTxid").textContent = t("txid");
+        document.getElementById("labelAmount").textContent = t("amount");
+        document.getElementById("labelNote").textContent = t("note");
+        noteEl.setAttribute("placeholder", t("notePh"));
+        submitBtn.textContent = t("send");
+        document.getElementById("backBtn").textContent = t("back");
+      }
+
+      function interpolate(template, vars) {
+        var output = String(template || "");
+        Object.keys(vars || {}).forEach(function (name) {
+          output = output.replace(new RegExp("{{\\s*" + name + "\\s*}}", "g"), String(vars[name]));
+        });
+        return output;
+      }
+
+      function setStatus(message, type) {
+        statusEl.textContent = message || "";
+        statusEl.className = "status" + (type ? " " + type : "");
+      }
+
+      function prefillEmail() {
+        var sessionEmail = String(localStorage.getItem("parax_pro_session_v1") || "").trim();
+        if (sessionEmail) emailEl.value = sessionEmail;
+      }
+
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        setStatus("", "");
+
+        var payload = {
+          email: String(emailEl.value || "").trim(),
+          full_name: String(nameEl.value || "").trim(),
+          txid: String(txidEl.value || "").trim(),
+          amount: String(amountEl.value || "").trim(),
+          note: String(noteEl.value || "").trim()
+        };
+
+        if (!payload.email || !payload.txid) {
+          setStatus(t("err"), "error");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        var previousLabel = submitBtn.textContent;
+        submitBtn.textContent = t("sending");
+
+        try {
+          var response = await fetch("/api/pix-request", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          var data = await response.json().catch(function () { return {}; });
+          if (!response.ok) {
+            throw new Error(data.error || t("err"));
+          }
+
+          form.reset();
+          prefillEmail();
+          setStatus(interpolate(t("ok"), { id: data.request_id || "-" }), "ok");
+        } catch (error) {
+          setStatus(error.message || t("err"), "error");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = previousLabel;
+        }
+      });
+
+      applyI18n();
+      prefillEmail();
+    })();
+  </script>
+</body>
+</html>
