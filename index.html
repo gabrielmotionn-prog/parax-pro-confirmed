@@ -1859,6 +1859,8 @@
       margin-top: 22px;
       display: flex;
       justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
       position: relative;
       z-index: 1;
     }
@@ -1868,6 +1870,15 @@
       padding: 17px 34px;
       border-radius: 18px;
       min-width: min(100%, 360px);
+    }
+
+    .offer-action .btn-soft {
+      font-size: 1.02rem;
+      padding: 17px 24px;
+      border-radius: 18px;
+      border-color: rgba(167, 139, 250, 0.45);
+      background: rgba(109, 40, 217, 0.12);
+      min-width: min(100%, 240px);
     }
 
     .offer-meta {
@@ -2376,6 +2387,10 @@
         font-size: 1rem;
       }
 
+      .offer-action .btn-soft {
+        min-width: 100%;
+      }
+
       .hero-pill {
         font-size: 0.78rem;
         padding: 8px 12px;
@@ -2670,6 +2685,7 @@
 
       <div class="offer-action">
         <a class="btn btn-main js-buy-link" href="https://checkout.paraxpro.com" data-buy-link="true" data-i18n="final.buy">Buy ParaX Pro</a>
+        <a class="btn btn-soft" href="support.html" data-i18n="final.support">Contact support</a>
       </div>
       <p class="offer-meta" data-i18n="final.meta">Instant download - 7-day guarantee - Secure payment</p>
     </section>
@@ -3074,6 +3090,7 @@
           "final.li7": "Email support",
           "final.li8": "Compatible AE 2022-2025",
           "final.buy": "Buy ParaX Pro",
+          "final.support": "Contact support",
           "final.meta": "Instant download - 7-day guarantee - Secure payment",
           "footer.text": "ParaX Pro - Premium plugin for cinematic depth in After Effects.",
           "pay.close": "Close",
@@ -3209,6 +3226,7 @@
           "final.li7": "Soporte por email",
           "final.li8": "Compatible AE 2022-2025",
           "final.buy": "Comprar ParaX Pro",
+          "final.support": "Contactar soporte",
           "final.meta": "Descarga instantanea - Garantia de 7 dias - Pago seguro",
           "footer.text": "ParaX Pro - Plugin premium para profundidad cinematográfica en After Effects.",
           "pay.close": "Cerrar",
@@ -3344,6 +3362,7 @@
           "final.li7": "Suporte por email",
           "final.li8": "Compativel AE 2022-2025",
           "final.buy": "Comprar ParaX Pro",
+          "final.support": "Falar com suporte",
           "final.meta": "Download instantaneo - Garantia de 7 dias - Pagamento seguro",
           "footer.text": "ParaX Pro - Plugin premium para profundidade cinematografica no After Effects.",
           "pay.close": "Fechar",
@@ -3530,7 +3549,7 @@
       var selectedPaymentMethod = "stripe";
       var STRIPE_CHECKOUT_URL = "https://buy.stripe.com/3cI9AV4KL2Q21MP0XF2Ji02";
       // PIX now opens a direct QR code page (no payment method list).
-      var PIX_CHECKOUT_URL = "https://parax-pro-confirmed.vercel.app/pix.html?v=2";
+      var PIX_CHECKOUT_URL = "/pix.html";
       var MERCADOPAGO_CHECKOUT_ENDPOINT = "/api/mercadopago-checkout";
 
       if (!authBackdrop || !loginForm || !signupForm) return;
@@ -3675,7 +3694,7 @@
         }
 
         if (safeMethod === "pix") {
-          if (PIX_CHECKOUT_URL && /^https?:\/\//i.test(PIX_CHECKOUT_URL)) {
+          if (PIX_CHECKOUT_URL) {
             return PIX_CHECKOUT_URL;
           }
           return MERCADOPAGO_CHECKOUT_ENDPOINT;
