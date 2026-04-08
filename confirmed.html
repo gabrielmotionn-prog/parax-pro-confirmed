@@ -269,23 +269,19 @@
   </style>
 </head>
 <body>
+  <script>
+    (function () {
+      var next = "email-sent.html" + (window.location.search || "") + (window.location.hash || "");
+      window.location.replace(next);
+    })();
+  </script>
   <main class="wrap">
-    <section class="panel" aria-labelledby="confirmedTitle">
-      <p class="badge">Payment confirmed</p>
-      <h1 id="confirmedTitle">Your purchase was successful</h1>
-      <p class="subtitle">Thank you for getting Parax Pro. Your access instructions will be sent to your email shortly.</p>
-
-      <ol class="steps">
-        <li>Payment received</li>
-        <li>Access being prepared</li>
-        <li>Download instructions sent by email</li>
-      </ol>
-
-      <p class="primary-note">Please check your inbox and spam folder.</p>
-      <p class="support-note">If you don&rsquo;t receive the email within a few minutes, contact support.</p>
-
+    <section class="panel" aria-labelledby="redirectTitle">
+      <p class="badge">Redirecting</p>
+      <h1 id="redirectTitle">Sending you to your access page...</h1>
+      <p class="subtitle">If you are not redirected automatically, continue below.</p>
       <div class="actions">
-        <a class="btn btn-primary" href="email-sent.html">Receive Parax Pro by email</a>
+        <a class="btn btn-primary" href="email-sent.html">Continue</a>
         <a class="btn btn-ghost" href="support.html">Contact support</a>
       </div>
     </section>
