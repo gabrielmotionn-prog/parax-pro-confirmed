@@ -229,6 +229,15 @@ module.exports = async function handler(req, res) {
       email: email
     });
   } catch (error) {
+    if (Number(error.statusCode) === 404) {
+      return res.status(200).json({
+        received: true,
+        ignored: true,
+        reason: "payment_not_found",
+        detail: error.message || "Payment id was not found."
+      });
+    }
+
     return res.status(Number(error.statusCode) || 500).json({
       error: error.message || "Unable to process Mercado Pago webhook."
     });
