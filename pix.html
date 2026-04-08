@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Parax Pro | PIX Checkout</title>
-  <meta name="description" content="Confirm your PIX payment and receive your Parax Pro key by email.">
+  <title>Parax Pro | PIX QR Code</title>
+  <meta name="description" content="Pay Parax Pro with a single PIX QR code.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #05030d;
+      --bg: #06040f;
       --panel: rgba(12, 8, 24, 0.92);
       --line: rgba(124, 58, 237, 0.36);
       --text: #f7f5ff;
@@ -36,7 +36,7 @@
     }
 
     .card {
-      width: min(760px, 100%);
+      width: min(920px, 100%);
       border-radius: 26px;
       border: 1px solid var(--line);
       background: linear-gradient(180deg, var(--panel), rgba(8, 5, 15, 0.95));
@@ -60,7 +60,10 @@
       pointer-events: none;
     }
 
-    .content { position: relative; z-index: 1; }
+    .content {
+      position: relative;
+      z-index: 1;
+    }
 
     .badge {
       display: inline-flex;
@@ -100,59 +103,87 @@
       line-height: 1.55;
     }
 
-    .pix-box {
-      border: 1px solid rgba(99, 102, 241, 0.34);
-      border-radius: 14px;
-      background: rgba(15, 12, 26, 0.84);
-      padding: 14px 16px;
-      margin-bottom: 16px;
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(250px, 330px) 1fr;
+      gap: 18px;
+      align-items: start;
     }
 
-    .pix-line {
-      margin: 0;
+    .qr-panel,
+    .details-panel {
+      border: 1px solid rgba(99, 102, 241, 0.34);
+      border-radius: 16px;
+      background: rgba(15, 12, 26, 0.84);
+      padding: 16px;
+    }
+
+    .qr-wrap {
+      display: grid;
+      place-items: center;
+      min-height: 286px;
+      border-radius: 14px;
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      background: rgba(8, 6, 18, 0.85);
+      overflow: hidden;
+    }
+
+    .qr-wrap img {
+      width: min(100%, 280px);
+      height: auto;
+      display: none;
+      border-radius: 10px;
+    }
+
+    .loading {
       color: #ddd6fe;
       font-size: 0.95rem;
-      line-height: 1.5;
+      text-align: center;
+      line-height: 1.45;
+      max-width: 220px;
     }
 
-    form {
-      display: grid;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .field label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 600;
+    .label {
+      margin: 0 0 8px;
       color: #d8cff9;
-      font-size: 0.92rem;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
     }
 
-    .field input,
-    .field textarea {
+    .code-box {
       width: 100%;
       border-radius: 12px;
       border: 1px solid rgba(124, 58, 237, 0.38);
       background: rgba(7, 5, 15, 0.9);
       color: #fff;
       padding: 12px 13px;
-      font: inherit;
-      outline: none;
-      transition: border-color .2s ease, box-shadow .2s ease;
+      font: 500 0.9rem/1.45 "Plus Jakarta Sans", sans-serif;
+      resize: none;
+      min-height: 86px;
     }
 
-    .field input:focus,
-    .field textarea:focus {
-      border-color: #8b5cf6;
-      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    .meta {
+      display: grid;
+      gap: 8px;
+      margin: 10px 0 14px;
+      color: #e8e2fb;
+      font-size: 0.95rem;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin: 0;
     }
 
     .actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-top: 4px;
+      margin-top: 12px;
     }
 
     .btn {
@@ -164,26 +195,22 @@
       text-decoration: none;
       text-align: center;
       transition: .2s ease;
+      color: #fff;
+      background: rgba(109, 40, 217, 0.2);
+      border-color: rgba(167, 139, 250, 0.45);
     }
 
     .btn-main {
-      color: #fff;
       background: linear-gradient(90deg, #6d28d9, #2563eb);
       border-color: rgba(167, 139, 250, 0.86);
       box-shadow: 0 14px 34px rgba(109, 40, 217, 0.36);
     }
 
-    .btn-main:hover { filter: brightness(1.08); transform: translateY(-1px); }
-    .btn-main:disabled { opacity: .65; cursor: not-allowed; transform: none; filter: none; box-shadow: none; }
-
-    .btn-ghost {
-      color: #ded6ff;
-      border-color: var(--line);
-      background: rgba(109, 40, 217, 0.12);
-    }
+    .btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .btn:disabled { opacity: .65; cursor: not-allowed; transform: none; filter: none; box-shadow: none; }
 
     .status {
-      margin-top: 14px;
+      margin-top: 12px;
       min-height: 24px;
       font-size: 0.94rem;
       line-height: 1.4;
@@ -193,7 +220,20 @@
     .status.ok { color: #bbf7d0; }
     .status.error { color: #fecaca; }
 
-    @media (max-width: 680px) {
+    .back-link {
+      margin-top: 12px;
+      display: inline-block;
+      color: #d8cff9;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .back-link:hover { color: #fff; }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .qr-wrap { min-height: 260px; }
       .actions { grid-template-columns: 1fr; }
     }
   </style>
@@ -201,144 +241,133 @@
 <body>
   <main class="card">
     <div class="content">
-      <p class="badge" id="badgeText">PIX payment flow</p>
-      <h1 id="titleText">Confirm your PIX payment</h1>
-      <p class="subtitle" id="subtitleText">Send your PIX transaction data below. After confirmation, your Parax Pro access key is sent by email.</p>
+      <p class="badge" id="badgeText">PIX direct checkout</p>
+      <h1 id="titleText">Scan and pay with PIX</h1>
+      <p class="subtitle" id="subtitleText">Only one QR code. After payment approval, your Parax Pro key is sent by email automatically.</p>
 
-      <section class="pix-box">
-        <p class="pix-line" id="pixInfoText"><strong>PIX key:</strong> configure your PIX key or QR instructions here.</p>
-      </section>
+      <div class="layout">
+        <section class="qr-panel">
+          <p class="label" id="qrLabel">PIX QR code</p>
+          <div class="qr-wrap">
+            <img id="qrImage" alt="PIX QR code">
+            <p class="loading" id="qrLoadingText">Generating your PIX QR code...</p>
+          </div>
+          <div class="actions">
+            <button class="btn btn-main" id="copyCodeBtn" type="button">Copy PIX code</button>
+            <button class="btn" id="newCodeBtn" type="button">Generate new code</button>
+          </div>
+        </section>
 
-      <form id="pixForm" novalidate>
-        <div class="field">
-          <label for="pixEmail" id="labelEmail">Email</label>
-          <input id="pixEmail" type="email" required>
-        </div>
-        <div class="field">
-          <label for="pixName" id="labelName">Full name (optional)</label>
-          <input id="pixName" type="text">
-        </div>
-        <div class="field">
-          <label for="pixTxid" id="labelTxid">PIX txid / transaction code</label>
-          <input id="pixTxid" type="text" required>
-        </div>
-        <div class="field">
-          <label for="pixAmount" id="labelAmount">Amount paid (optional)</label>
-          <input id="pixAmount" type="text" placeholder="$15.00">
-        </div>
-        <div class="field">
-          <label for="pixNote" id="labelNote">Note (optional)</label>
-          <textarea id="pixNote" rows="3" placeholder="Any extra detail about your payment"></textarea>
-        </div>
-
-        <div class="actions">
-          <button class="btn btn-main" type="submit" id="submitBtn">Send PIX proof</button>
-          <a class="btn btn-ghost" href="/index.html" id="backBtn">Back to homepage</a>
-        </div>
-      </form>
-
-      <p id="status" class="status" aria-live="polite"></p>
+        <section class="details-panel">
+          <p class="label" id="copyLabel">PIX copy and paste code</p>
+          <textarea class="code-box" id="qrCodeText" readonly></textarea>
+          <div class="meta">
+            <div id="productText">Product: -</div>
+            <div id="amountText">Amount: -</div>
+            <div id="expiresText">Expires: -</div>
+            <div id="paymentText">Payment ID: -</div>
+          </div>
+          <p class="muted" id="helpText">Keep this page open until payment is approved. License instructions are sent to your email.</p>
+          <p class="status" id="status" aria-live="polite"></p>
+          <a class="back-link" href="/index.html" id="backText">Back to homepage</a>
+        </section>
+      </div>
     </div>
   </main>
 
   <script>
     (function () {
       var LANGUAGE_KEY = "parax_pro_lang_v1";
-      var form = document.getElementById("pixForm");
-      var submitBtn = document.getElementById("submitBtn");
+      var SESSION_KEY = "parax_pro_session_v1";
+      var ENDPOINT = "/api/mercadopago-pix";
+
+      var qrImage = document.getElementById("qrImage");
+      var qrLoadingText = document.getElementById("qrLoadingText");
+      var qrCodeText = document.getElementById("qrCodeText");
       var statusEl = document.getElementById("status");
-      var emailEl = document.getElementById("pixEmail");
-      var nameEl = document.getElementById("pixName");
-      var txidEl = document.getElementById("pixTxid");
-      var amountEl = document.getElementById("pixAmount");
-      var noteEl = document.getElementById("pixNote");
+      var copyCodeBtn = document.getElementById("copyCodeBtn");
+      var newCodeBtn = document.getElementById("newCodeBtn");
+      var amountText = document.getElementById("amountText");
+      var productText = document.getElementById("productText");
+      var expiresText = document.getElementById("expiresText");
+      var paymentText = document.getElementById("paymentText");
+
+      var currentPayload = null;
 
       var texts = {
         en: {
-          badge: "PIX payment flow",
-          title: "Confirm your PIX payment",
-          subtitle: "Send your PIX transaction data below. After confirmation, your Parax Pro access key is sent by email.",
-          pixInfo: "<strong>PIX key:</strong> configure your PIX key or QR instructions here.",
-          email: "Email",
-          name: "Full name (optional)",
-          txid: "PIX txid / transaction code",
-          amount: "Amount paid (optional)",
-          note: "Note (optional)",
-          notePh: "Any extra detail about your payment",
-          send: "Send PIX proof",
+          badge: "PIX direct checkout",
+          title: "Scan and pay with PIX",
+          subtitle: "Only one QR code. After payment approval, your Parax Pro key is sent by email automatically.",
+          qrLabel: "PIX QR code",
+          copyLabel: "PIX copy and paste code",
+          copyBtn: "Copy PIX code",
+          newBtn: "Generate new code",
           back: "Back to homepage",
-          sending: "Sending...",
-          ok: "Payment proof sent successfully. Request ID: {{id}}. We will confirm and send your key by email.",
-          err: "Unable to send PIX proof right now."
+          loading: "Generating your PIX QR code...",
+          help: "Keep this page open until payment is approved. License instructions are sent to your email.",
+          product: "Product: {{value}}",
+          amount: "Amount: R$ {{value}}",
+          expires: "Expires: {{value}}",
+          payment: "Payment ID: {{value}}",
+          copied: "PIX code copied.",
+          copyError: "Unable to copy now.",
+          noEmail: "Login required. Please sign in on homepage first.",
+          fail: "Unable to create PIX QR code right now."
         },
         es: {
-          badge: "Flujo de pago PIX",
-          title: "Confirma tu pago por PIX",
-          subtitle: "Envía los datos de tu transacción PIX. Tras la confirmación, tu clave de Parax Pro se envía por correo.",
-          pixInfo: "<strong>Clave PIX:</strong> configura aquí tu clave PIX o instrucciones de QR.",
-          email: "Correo",
-          name: "Nombre completo (opcional)",
-          txid: "TXID / código de transacción PIX",
-          amount: "Importe pagado (opcional)",
-          note: "Nota (opcional)",
-          notePh: "Cualquier detalle extra sobre tu pago",
-          send: "Enviar comprobante PIX",
+          badge: "Checkout PIX directo",
+          title: "Escanea y paga con PIX",
+          subtitle: "Solo un QR code. Tras aprobarse el pago, tu clave de Parax Pro se envia por correo automaticamente.",
+          qrLabel: "QR code PIX",
+          copyLabel: "Codigo PIX para copiar y pegar",
+          copyBtn: "Copiar codigo PIX",
+          newBtn: "Generar nuevo codigo",
           back: "Volver al inicio",
-          sending: "Enviando...",
-          ok: "Comprobante enviado. ID de solicitud: {{id}}. Confirmaremos y enviaremos tu clave por correo.",
-          err: "No se pudo enviar el comprobante PIX ahora."
+          loading: "Generando tu QR code PIX...",
+          help: "Manten esta pagina abierta hasta la aprobacion del pago. Las instrucciones llegan por correo.",
+          product: "Producto: {{value}}",
+          amount: "Importe: R$ {{value}}",
+          expires: "Vence: {{value}}",
+          payment: "ID de pago: {{value}}",
+          copied: "Codigo PIX copiado.",
+          copyError: "No se pudo copiar ahora.",
+          noEmail: "Se requiere login. Inicia sesion en la home primero.",
+          fail: "No se pudo crear el QR PIX ahora."
         },
         pt: {
-          badge: "Fluxo de pagamento PIX",
-          title: "Confirme seu pagamento via PIX",
-          subtitle: "Envie os dados da sua transacao PIX. Apos a confirmacao, sua chave do Parax Pro sera enviada por e-mail.",
-          pixInfo: "<strong>Chave PIX:</strong> configure aqui sua chave PIX ou instrucoes de QR code.",
-          email: "E-mail",
-          name: "Nome completo (opcional)",
-          txid: "TXID / codigo da transacao PIX",
-          amount: "Valor pago (opcional)",
-          note: "Observacao (opcional)",
-          notePh: "Qualquer detalhe extra sobre seu pagamento",
-          send: "Enviar comprovante PIX",
+          badge: "Checkout PIX direto",
+          title: "Escaneie e pague com PIX",
+          subtitle: "Apenas um QR code. Apos a aprovacao do pagamento, sua chave do Parax Pro e enviada por e-mail automaticamente.",
+          qrLabel: "QR code PIX",
+          copyLabel: "Codigo PIX copia e cola",
+          copyBtn: "Copiar codigo PIX",
+          newBtn: "Gerar novo codigo",
           back: "Voltar para home",
-          sending: "Enviando...",
-          ok: "Comprovante enviado com sucesso. ID: {{id}}. Vamos confirmar e enviar sua chave por e-mail.",
-          err: "Nao foi possivel enviar o comprovante PIX agora."
+          loading: "Gerando seu QR code PIX...",
+          help: "Mantenha esta pagina aberta ate a aprovacao do pagamento. As instrucoes da licenca chegam por e-mail.",
+          product: "Produto: {{value}}",
+          amount: "Valor: R$ {{value}}",
+          expires: "Expira em: {{value}}",
+          payment: "ID do pagamento: {{value}}",
+          copied: "Codigo PIX copiado.",
+          copyError: "Nao foi possivel copiar agora.",
+          noEmail: "Login necessario. Entre na home primeiro.",
+          fail: "Nao foi possivel gerar o QR PIX agora."
         }
       };
 
-      function currentLanguage() {
-        var saved = String(localStorage.getItem(LANGUAGE_KEY) || "en").toLowerCase();
-        return texts[saved] ? saved : "en";
+      function lang() {
+        var value = String(localStorage.getItem(LANGUAGE_KEY) || "en").toLowerCase();
+        return texts[value] ? value : "en";
       }
 
-      function t(key) {
-        var lang = currentLanguage();
-        return (texts[lang] && texts[lang][key]) || texts.en[key] || key;
-      }
-
-      function applyI18n() {
-        document.documentElement.lang = currentLanguage() === "pt" ? "pt-BR" : currentLanguage();
-        document.getElementById("badgeText").textContent = t("badge");
-        document.getElementById("titleText").textContent = t("title");
-        document.getElementById("subtitleText").textContent = t("subtitle");
-        document.getElementById("pixInfoText").innerHTML = t("pixInfo");
-        document.getElementById("labelEmail").textContent = t("email");
-        document.getElementById("labelName").textContent = t("name");
-        document.getElementById("labelTxid").textContent = t("txid");
-        document.getElementById("labelAmount").textContent = t("amount");
-        document.getElementById("labelNote").textContent = t("note");
-        noteEl.setAttribute("placeholder", t("notePh"));
-        submitBtn.textContent = t("send");
-        document.getElementById("backBtn").textContent = t("back");
-      }
-
-      function interpolate(template, vars) {
-        var output = String(template || "");
-        Object.keys(vars || {}).forEach(function (name) {
-          output = output.replace(new RegExp("{{\\s*" + name + "\\s*}}", "g"), String(vars[name]));
+      function t(key, vars) {
+        var table = texts[lang()] || texts.en;
+        var template = table[key] || texts.en[key] || key;
+        return String(template).replace(/\{\{\s*(\w+)\s*\}\}/g, function (_, name) {
+          return vars && typeof vars[name] !== "undefined" ? String(vars[name]) : "";
         });
-        return output;
       }
 
       function setStatus(message, type) {
@@ -346,57 +375,105 @@
         statusEl.className = "status" + (type ? " " + type : "");
       }
 
-      function prefillEmail() {
-        var sessionEmail = String(localStorage.getItem("parax_pro_session_v1") || "").trim();
-        if (sessionEmail) emailEl.value = sessionEmail;
+      function setLoading(isLoading) {
+        qrLoadingText.style.display = isLoading ? "block" : "none";
+        qrImage.style.display = isLoading ? "none" : "block";
+        copyCodeBtn.disabled = isLoading;
+        newCodeBtn.disabled = isLoading;
       }
 
-      form.addEventListener("submit", async function (event) {
-        event.preventDefault();
+      function formatDate(value) {
+        if (!value) return "-";
+        try {
+          return new Date(value).toLocaleString();
+        } catch (error) {
+          return String(value);
+        }
+      }
+
+      function renderData(payload) {
+        currentPayload = payload || null;
+        qrImage.src = "data:image/png;base64," + payload.qr_code_base64;
+        qrCodeText.value = payload.qr_code || "";
+        productText.textContent = t("product", { value: payload.description || "-" });
+        amountText.textContent = t("amount", { value: Number(payload.amount || 0).toFixed(2).replace(".", ",") });
+        expiresText.textContent = t("expires", { value: formatDate(payload.expires_at) });
+        paymentText.textContent = t("payment", { value: payload.payment_id || "-" });
+        setLoading(false);
+      }
+
+      async function generatePix() {
         setStatus("", "");
+        setLoading(true);
 
-        var payload = {
-          email: String(emailEl.value || "").trim(),
-          full_name: String(nameEl.value || "").trim(),
-          txid: String(txidEl.value || "").trim(),
-          amount: String(amountEl.value || "").trim(),
-          note: String(noteEl.value || "").trim()
-        };
-
-        if (!payload.email || !payload.txid) {
-          setStatus(t("err"), "error");
+        var email = String(localStorage.getItem(SESSION_KEY) || "").trim().toLowerCase();
+        if (!email) {
+          setLoading(false);
+          setStatus(t("noEmail"), "error");
           return;
         }
 
-        submitBtn.disabled = true;
-        var previousLabel = submitBtn.textContent;
-        submitBtn.textContent = t("sending");
-
         try {
-          var response = await fetch("/api/pix-request", {
+          var response = await fetch(ENDPOINT, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ email: email })
           });
 
-          var data = await response.json().catch(function () { return {}; });
-          if (!response.ok) {
-            throw new Error(data.error || t("err"));
+          var payload = await response.json().catch(function () {
+            return {};
+          });
+
+          if (!response.ok || !payload.qr_code_base64 || !payload.qr_code) {
+            throw new Error(payload.error || t("fail"));
           }
 
-          form.reset();
-          prefillEmail();
-          setStatus(interpolate(t("ok"), { id: data.request_id || "-" }), "ok");
+          renderData(payload);
         } catch (error) {
-          setStatus(error.message || t("err"), "error");
-        } finally {
-          submitBtn.disabled = false;
-          submitBtn.textContent = previousLabel;
+          setLoading(false);
+          setStatus(error.message || t("fail"), "error");
+        }
+      }
+
+      function applyI18n() {
+        var currentLang = lang();
+        document.documentElement.lang = currentLang === "pt" ? "pt-BR" : currentLang;
+        document.getElementById("badgeText").textContent = t("badge");
+        document.getElementById("titleText").textContent = t("title");
+        document.getElementById("subtitleText").textContent = t("subtitle");
+        document.getElementById("qrLabel").textContent = t("qrLabel");
+        document.getElementById("copyLabel").textContent = t("copyLabel");
+        document.getElementById("helpText").textContent = t("help");
+        document.getElementById("backText").textContent = t("back");
+        copyCodeBtn.textContent = t("copyBtn");
+        newCodeBtn.textContent = t("newBtn");
+        qrLoadingText.textContent = t("loading");
+      }
+
+      copyCodeBtn.addEventListener("click", async function () {
+        var code = String(qrCodeText.value || "").trim();
+        if (!code) return;
+
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(code);
+          } else {
+            qrCodeText.select();
+            document.execCommand("copy");
+            window.getSelection().removeAllRanges();
+          }
+          setStatus(t("copied"), "ok");
+        } catch (error) {
+          setStatus(t("copyError"), "error");
         }
       });
 
+      newCodeBtn.addEventListener("click", function () {
+        generatePix();
+      });
+
       applyI18n();
-      prefillEmail();
+      generatePix();
     })();
   </script>
 </body>

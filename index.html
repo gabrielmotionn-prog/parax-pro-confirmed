@@ -3529,9 +3529,8 @@
       var pendingCheckoutHref = "";
       var selectedPaymentMethod = "stripe";
       var STRIPE_CHECKOUT_URL = "https://buy.stripe.com/3cI9AV4KL2Q21MP0XF2Ji02";
-      // Optional: paste a dedicated Stripe PIX payment link here.
-      // If empty, PIX will use Mercado Pago auto-checkout endpoint.
-      var PIX_CHECKOUT_URL = "";
+      // PIX now opens a direct QR code page (no payment method list).
+      var PIX_CHECKOUT_URL = "/pix.html";
       var MERCADOPAGO_CHECKOUT_ENDPOINT = "/api/mercadopago-checkout";
 
       if (!authBackdrop || !loginForm || !signupForm) return;
