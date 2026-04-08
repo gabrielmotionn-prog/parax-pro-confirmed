@@ -252,6 +252,37 @@
       font-size: 0.9rem;
     }
 
+    .download-actions {
+      margin-top: 16px;
+      display: none;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .download-actions.show {
+      display: grid;
+    }
+
+    .download-btn {
+      border-radius: 12px;
+      border: 1px solid rgba(167, 139, 250, 0.5);
+      background: rgba(109, 40, 217, 0.16);
+      color: #efe9ff;
+      text-decoration: none;
+      font: 700 0.92rem "Space Grotesk", sans-serif;
+      padding: 12px 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.22s ease;
+    }
+
+    .download-btn:hover {
+      border-color: rgba(167, 139, 250, 0.78);
+      background: rgba(109, 40, 217, 0.28);
+      transform: translateY(-1px);
+    }
+
     @media (max-width: 640px) {
       .panel {
         border-radius: 22px;
@@ -259,6 +290,10 @@
 
       .actions .btn {
         width: 100%;
+      }
+
+      .download-actions {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -280,6 +315,10 @@
           <p class="key-label">Your Plugin Access Key</p>
           <p id="keyValue" class="key-value"></p>
           <p id="keyHint" class="key-hint">Click to generate your real license key from this purchase.</p>
+          <div id="downloadActions" class="download-actions">
+            <a id="downloadWindows" class="download-btn" href="#" target="_blank" rel="noopener">Download for Windows</a>
+            <a id="downloadMac" class="download-btn" href="#" target="_blank" rel="noopener">Download for Mac</a>
+          </div>
         </div>
       </div>
     </section>
@@ -287,17 +326,30 @@
   <script>
     (function () {
       const STORAGE_KEY = "paraxProLicenseKey";
+      const WINDOWS_DOWNLOAD_URL = "#";
+      const MAC_DOWNLOAD_URL = "#";
       const generateBtn = document.getElementById("generateKeyBtn");
       const keyBox = document.getElementById("keyBox");
       const keyValue = document.getElementById("keyValue");
       const keyHint = document.getElementById("keyHint");
+      const downloadActions = document.getElementById("downloadActions");
+      const downloadWindows = document.getElementById("downloadWindows");
+      const downloadMac = document.getElementById("downloadMac");
       const params = new URLSearchParams(window.location.search);
       const sessionId = String(params.get("session_id") || "").trim();
       const paymentId = String(params.get("payment_id") || "").trim();
 
+      downloadWindows.href = WINDOWS_DOWNLOAD_URL;
+      downloadMac.href = MAC_DOWNLOAD_URL;
+
+      function showDownloads() {
+        downloadActions.classList.add("show");
+      }
+
       function showKey(key) {
         keyValue.textContent = key;
         keyBox.classList.add("show");
+        showDownloads();
       }
 
       async function copyKeyToClipboard(key) {
