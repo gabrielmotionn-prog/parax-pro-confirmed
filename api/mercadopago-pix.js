@@ -44,12 +44,20 @@ async function mpRequest(params) {
     throw error;
   }
 
+  const headers = {
+    Authorization: "Bearer " + token,
+    "Content-Type": "application/json"
+  };
+
+  if ((params.method || "GET").toUpperCase() === "POST") {
+    headers["X-Idempotency-Key"] =
+      normalize(params.idempotencyKey) ||
+      ("parax-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10));
+  }
+
   const response = await fetch(MP_API_BASE + params.path, {
     method: params.method || "GET",
-    headers: {
-      Authorization: "Bearer " + token,
-      "Content-Type": "application/json"
-    },
+    headers: headers,
     body: params.body ? JSON.stringify(params.body) : undefined
   });
 
@@ -87,6 +95,7 @@ module.exports = async function handler(req, res) {
     const payment = await mpRequest({
       method: "POST",
       path: "/v1/payments",
+      idempotencyKey: "pix-" + createExternalRef(),
       body: {
         transaction_amount: amount,
         description: title,
