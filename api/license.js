@@ -99,16 +99,37 @@ function parseMercadoPagoLicenseKey(key) {
   };
 }
 
-function createMercadoPagoActivationToken(paymentId) {
+function createMercadoPagoActivationToken(paymentId, machineId) {
   const normalizedPaymentId = normalizePaymentId(paymentId);
-  const rand = crypto.randomBytes(10).toString("hex");
-  return "prx_mptok__" + normalizedPaymentId + "__" + rand;
+  const normalizedMachineId = normalizeMachineId(machineId);
+  if (!normalizedPaymentId || !normalizedMachineId) return "";
+  const signature = hmacHex("mptok:" + normalizedPaymentId + ":" + normalizedMachineId).slice(0, 24);
+  return "prx_mptok2__" + normalizedPaymentId + "__" + signature;
 }
 
-function extractMercadoPagoPaymentIdFromToken(token) {
+function parseMercadoPagoActivationToken(token) {
   const value = normalizeToken(token);
-  const match = /^prx_mptok__(\d+)__[a-f0-9]+$/i.exec(value);
-  return match ? match[1] : "";
+
+  // Stateless token format (current)
+  const stateless = /^prx_mptok2__(\d+)__([A-F0-9]{24})$/i.exec(value);
+  if (stateless) {
+    return {
+      version: 2,
+      paymentId: stateless[1],
+      signature: String(stateless[2] || "").toUpperCase()
+    };
+  }
+
+  // Legacy token format (metadata-backed)
+  const legacy = /^prx_mptok__(\d+)__[a-f0-9]+$/i.exec(value);
+  if (legacy) {
+    return {
+      version: 1,
+      paymentId: legacy[1]
+    };
+  }
+
+  return null;
 }
 
 function randomKeyChunk(size) {
@@ -546,33 +567,26 @@ async function handleGenerateMercadoPago(paymentId) {
   }
 
   const metadata = (payment && payment.metadata) || {};
-  let licenseKey = normalizeLicenseKey(metadata[META.LICENSE_KEY]);
-  const reused = Boolean(licenseKey);
-
-  if (!licenseKey) {
-    licenseKey = makeMercadoPagoLicenseKey(normalizedPaymentId);
-    const email =
-      normalizeString(metadata[META.LICENSE_EMAIL]) ||
-      normalizeString(payment && payment.payer && payment.payer.email) ||
-      "";
-
-    const updated = await updateMercadoPagoPaymentMetadata(normalizedPaymentId, {
-      [META.LICENSE_KEY]: licenseKey,
-      [META.LICENSE_MAX]: String(DEFAULT_MAX_ACTIVATIONS),
-      [META.LICENSE_EMAIL]: email
-    });
-
-    payment.metadata = updated.metadata || metadata;
-  }
+  const existingKey = normalizeLicenseKey(metadata[META.LICENSE_KEY]);
+  const email =
+    normalizeString(metadata[META.LICENSE_EMAIL]) ||
+    normalizeString(payment && payment.payer && payment.payer.email) ||
+    "";
+  const licenseKey = existingKey || makeMercadoPagoLicenseKey(normalizedPaymentId);
+  const effectiveMetadata = Object.assign({}, metadata, {
+    [META.LICENSE_KEY]: licenseKey,
+    [META.LICENSE_MAX]: normalizeString(metadata[META.LICENSE_MAX]) || String(DEFAULT_MAX_ACTIVATIONS),
+    [META.LICENSE_EMAIL]: email
+  });
 
   return {
     statusCode: 200,
     payload: {
       ok: true,
-      reused: reused,
+      reused: Boolean(existingKey),
       source: "mercadopago",
       payment_id: normalizedPaymentId,
-      license: buildMercadoPagoLicensePayload(payment, payment.metadata || {})
+      license: buildMercadoPagoLicensePayload(payment, effectiveMetadata)
     }
   };
 }
@@ -680,91 +694,35 @@ async function handleActivate(licenseKey, machineId) {
         return { statusCode: 402, payload: { error: "Payment not completed for this license." } };
       }
 
-      let metadata = (payment && payment.metadata) || {};
+      const metadata = (payment && payment.metadata) || {};
       const currentKey = normalizeLicenseKey(metadata[META.LICENSE_KEY]);
       if (currentKey && currentKey !== normalizedKey) {
         return { statusCode: 404, payload: { error: "Invalid license key." } };
       }
 
-      if (!currentKey) {
-        const seeded = await updateMercadoPagoPaymentMetadata(parsedMp.paymentId, {
-          [META.LICENSE_KEY]: normalizedKey,
-          [META.LICENSE_MAX]: String(DEFAULT_MAX_ACTIVATIONS),
-          [META.LICENSE_EMAIL]:
-            normalizeString(payment && payment.payer && payment.payer.email) || ""
-        });
-        metadata = seeded.metadata || metadata;
+      const token = createMercadoPagoActivationToken(parsedMp.paymentId, normalizedMachine);
+      if (!token) {
+        return { statusCode: 500, payload: { error: "Unable to create activation token." } };
       }
-
-      const maxActivations = getMaxActivations(metadata);
-      const slots = getActivationSlots(metadata, maxActivations);
-
-      for (let j = 0; j < slots.length; j += 1) {
-        const slotExisting = slots[j];
-        if (slotExisting.machineId === normalizedMachine) {
-          const existingToken =
-            slotExisting.token || createMercadoPagoActivationToken(parsedMp.paymentId);
-          if (!slotExisting.token) {
-            await updateMercadoPagoPaymentMetadata(parsedMp.paymentId, {
-              [META.TOKEN_PREFIX + slotExisting.index]: existingToken,
-              [META.ACTIVATED_AT_PREFIX + slotExisting.index]:
-                slotExisting.activatedAt || new Date().toISOString()
-            });
-            metadata[META.TOKEN_PREFIX + slotExisting.index] = existingToken;
-          }
-          return {
-            statusCode: 200,
-            payload: {
-              ok: true,
-              token: existingToken,
-              already_activated: true,
-              license: buildMercadoPagoLicensePayload(payment, metadata)
-            }
-          };
-        }
-      }
-
-      const used = slots.filter(function (slot) {
-        return Boolean(slot.machineId);
+      const responseMetadata = Object.assign({}, metadata, {
+        [META.LICENSE_KEY]: currentKey || normalizedKey,
+        [META.LICENSE_MAX]: normalizeString(metadata[META.LICENSE_MAX]) || String(DEFAULT_MAX_ACTIVATIONS),
+        [META.LICENSE_EMAIL]:
+          normalizeString(metadata[META.LICENSE_EMAIL]) ||
+          normalizeString(payment && payment.payer && payment.payer.email) ||
+          "",
+        [META.MACHINE_PREFIX + "1"]: normalizedMachine,
+        [META.TOKEN_PREFIX + "1"]: token,
+        [META.ACTIVATED_AT_PREFIX + "1"]: new Date().toISOString()
       });
-      if (used.length >= maxActivations) {
-        return {
-          statusCode: 409,
-          payload: {
-            error: "Activation limit reached for this license.",
-            license: buildMercadoPagoLicensePayload(payment, metadata)
-          }
-        };
-      }
-
-      const free = slots.find(function (slot) {
-        return !slot.machineId;
-      });
-      if (!free) {
-        return {
-          statusCode: 409,
-          payload: {
-            error: "Activation limit reached for this license.",
-            license: buildMercadoPagoLicensePayload(payment, metadata)
-          }
-        };
-      }
-
-      const token = createMercadoPagoActivationToken(parsedMp.paymentId);
-      const updatePatch = {};
-      updatePatch[META.MACHINE_PREFIX + free.index] = normalizedMachine;
-      updatePatch[META.TOKEN_PREFIX + free.index] = token;
-      updatePatch[META.ACTIVATED_AT_PREFIX + free.index] = new Date().toISOString();
-      const updatedPayment = await updateMercadoPagoPaymentMetadata(parsedMp.paymentId, updatePatch);
-      const updatedMeta = updatedPayment.metadata || metadata;
 
       return {
         statusCode: 200,
         payload: {
           ok: true,
           token: token,
-          already_activated: false,
-          license: buildMercadoPagoLicensePayload(updatedPayment, updatedMeta)
+          already_activated: true,
+          license: buildMercadoPagoLicensePayload(payment, responseMetadata)
         }
       };
     }
@@ -785,9 +743,9 @@ async function handleCheck(token, machineId) {
   }
 
   // Mercado Pago tokens
-  const mpPaymentId = extractMercadoPagoPaymentIdFromToken(normalizedToken);
-  if (mpPaymentId && hasMercadoPagoConfigured()) {
-    const payment = await getMercadoPagoPayment(mpPaymentId);
+  const mpToken = parseMercadoPagoActivationToken(normalizedToken);
+  if (mpToken && hasMercadoPagoConfigured()) {
+    const payment = await getMercadoPagoPayment(mpToken.paymentId);
     if (!mercadoPagoPaymentIsApproved(payment)) {
       return {
         statusCode: 401,
@@ -800,6 +758,41 @@ async function handleCheck(token, machineId) {
     }
 
     const metadata = (payment && payment.metadata) || {};
+    if (mpToken.version === 2) {
+      const expectedToken = createMercadoPagoActivationToken(mpToken.paymentId, normalizedMachine);
+      if (!expectedToken || normalizeToken(expectedToken).toUpperCase() !== normalizeToken(normalizedToken).toUpperCase()) {
+        return {
+          statusCode: 401,
+          payload: {
+            valid: false,
+            error: "License validation failed.",
+            reason: "machine_mismatch"
+          }
+        };
+      }
+
+      const responseMetadata = Object.assign({}, metadata, {
+        [META.LICENSE_KEY]:
+          normalizeLicenseKey(metadata[META.LICENSE_KEY]) || makeMercadoPagoLicenseKey(mpToken.paymentId),
+        [META.LICENSE_MAX]: normalizeString(metadata[META.LICENSE_MAX]) || String(DEFAULT_MAX_ACTIVATIONS),
+        [META.LICENSE_EMAIL]:
+          normalizeString(metadata[META.LICENSE_EMAIL]) ||
+          normalizeString(payment && payment.payer && payment.payer.email) ||
+          "",
+        [META.MACHINE_PREFIX + "1"]: normalizedMachine,
+        [META.TOKEN_PREFIX + "1"]: normalizedToken
+      });
+
+      return {
+        statusCode: 200,
+        payload: {
+          valid: true,
+          license: buildMercadoPagoLicensePayload(payment, responseMetadata)
+        }
+      };
+    }
+
+    // Legacy Mercado Pago token fallback (metadata-backed)
     const maxActivations = getMaxActivations(metadata);
     const slots = getActivationSlots(metadata, maxActivations);
     const matchedSlot = slots.find(function (slot) {

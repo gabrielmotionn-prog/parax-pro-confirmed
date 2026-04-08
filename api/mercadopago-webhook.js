@@ -11,6 +11,7 @@ const META = {
   EMAIL_SENT_AT: "parax_license_email_sent_at",
   EMAIL_SENT_ID: "parax_license_email_sent_id"
 };
+const sentEmailByPaymentId = Object.create(null);
 
 function normalize(value) {
   return String(value || "").trim();
@@ -97,18 +98,6 @@ async function getPayment(paymentId) {
   });
 }
 
-async function updatePaymentMetadata(paymentId, metadataPatch) {
-  const payment = await getPayment(paymentId);
-  const currentMetadata = (payment && payment.metadata) || {};
-  const mergedMetadata = Object.assign({}, currentMetadata, metadataPatch || {});
-
-  return mpRequest({
-    method: "PUT",
-    path: "/v1/payments/" + encodeURIComponent(paymentId),
-    body: { metadata: mergedMetadata }
-  });
-}
-
 function isApproved(payment) {
   return normalize(payment && payment.status).toLowerCase() === "approved";
 }
@@ -125,7 +114,7 @@ function extractPaymentId(req, eventPayload) {
   return normalizePaymentId(fromEvent || fromQuery);
 }
 
-async function sendLicenseEmail(email, licenseKey) {
+async function sendLicenseEmail(email, licenseKey, paymentId) {
   const resendApiKey = process.env.RESEND_API_KEY;
   if (!resendApiKey) {
     const error = new Error("RESEND_API_KEY is not configured.");
@@ -140,7 +129,8 @@ async function sendLicenseEmail(email, licenseKey) {
     method: "POST",
     headers: {
       Authorization: "Bearer " + resendApiKey,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "Idempotency-Key": "parax-mp-email-" + normalizePaymentId(paymentId)
     },
     body: JSON.stringify({
       from: supportFromEmail,
@@ -202,22 +192,12 @@ module.exports = async function handler(req, res) {
       normalize(metadata[META.LICENSE_EMAIL]) ||
       normalize(payment && payment.payer && payment.payer.email);
 
-    let updatedMetadata = metadata;
-    if (!normalize(metadata[META.LICENSE_KEY])) {
-      const updated = await updatePaymentMetadata(paymentId, {
-        [META.LICENSE_KEY]: licenseKey,
-        [META.LICENSE_MAX]: String(DEFAULT_MAX_ACTIVATIONS),
-        [META.LICENSE_EMAIL]: email
-      });
-      updatedMetadata = updated.metadata || metadata;
-    }
-
-    if (normalize(updatedMetadata[META.EMAIL_SENT_AT])) {
+    if (sentEmailByPaymentId[paymentId]) {
       return res.status(200).json({
         received: true,
         processed: true,
         skipped: true,
-        reason: "email_already_sent"
+        reason: "email_already_sent_runtime"
       });
     }
 
@@ -225,11 +205,11 @@ module.exports = async function handler(req, res) {
       throw new Error("Payer email was not found on approved payment.");
     }
 
-    const emailId = await sendLicenseEmail(email, licenseKey);
-    await updatePaymentMetadata(paymentId, {
-      [META.EMAIL_SENT_AT]: new Date().toISOString(),
-      [META.EMAIL_SENT_ID]: emailId
-    });
+    const emailId = await sendLicenseEmail(email, licenseKey, paymentId);
+    sentEmailByPaymentId[paymentId] = {
+      id: emailId,
+      at: new Date().toISOString()
+    };
 
     return res.status(200).json({
       received: true,
