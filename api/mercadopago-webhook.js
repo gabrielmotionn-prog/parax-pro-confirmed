@@ -58,12 +58,21 @@ async function mpRequest(params) {
     throw error;
   }
 
+  const method = String(params.method || "GET").toUpperCase();
+  const headers = {
+    Authorization: "Bearer " + token,
+    "Content-Type": "application/json"
+  };
+
+  if (method !== "GET") {
+    headers["X-Idempotency-Key"] =
+      normalize(params.idempotencyKey) ||
+      ("parax-webhook-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10));
+  }
+
   const response = await fetch(MP_API_BASE + params.path, {
-    method: params.method || "GET",
-    headers: {
-      Authorization: "Bearer " + token,
-      "Content-Type": "application/json"
-    },
+    method: method,
+    headers: headers,
     body: params.body ? JSON.stringify(params.body) : undefined
   });
 

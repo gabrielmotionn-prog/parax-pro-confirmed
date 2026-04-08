@@ -300,7 +300,7 @@ async function updateCheckoutSessionMetadata(sessionId, metadataPatch) {
 
 async function mercadoPagoRequest(params) {
   const token = getMercadoPagoToken();
-  const method = params.method || "GET";
+  const method = (params.method || "GET").toUpperCase();
   const path = params.path || "/";
   const body = params.body || null;
   const query = params.query || null;
@@ -321,6 +321,11 @@ async function mercadoPagoRequest(params) {
   const headers = {
     Authorization: "Bearer " + token
   };
+  if (method !== "GET") {
+    headers["X-Idempotency-Key"] =
+      normalizeString(params.idempotencyKey) ||
+      ("parax-license-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10));
+  }
   const fetchOptions = {
     method: method,
     headers: headers
@@ -470,7 +475,7 @@ async function findSessionByToken(token) {
   return null;
 }
 
-async function handleGenerate(sessionId) {
+async function handleGenerateStripe(sessionId) {
   const session = await getCheckoutSession(sessionId);
   if (!isSessionPaid(session)) {
     return {
@@ -514,6 +519,60 @@ async function handleGenerate(sessionId) {
       ok: true,
       reused: reused,
       license: payload
+    }
+  };
+}
+
+async function handleGenerateMercadoPago(paymentId) {
+  const normalizedPaymentId = normalizePaymentId(paymentId);
+  if (!normalizedPaymentId) {
+    return {
+      statusCode: 400,
+      payload: {
+        error: "payment_id is required."
+      }
+    };
+  }
+
+  const payment = await getMercadoPagoPayment(normalizedPaymentId);
+  if (!mercadoPagoPaymentIsApproved(payment)) {
+    return {
+      statusCode: 402,
+      payload: {
+        error: "Payment not completed for this PIX payment.",
+        payment_status: normalizeAction(payment && payment.status) || null
+      }
+    };
+  }
+
+  const metadata = (payment && payment.metadata) || {};
+  let licenseKey = normalizeLicenseKey(metadata[META.LICENSE_KEY]);
+  const reused = Boolean(licenseKey);
+
+  if (!licenseKey) {
+    licenseKey = makeMercadoPagoLicenseKey(normalizedPaymentId);
+    const email =
+      normalizeString(metadata[META.LICENSE_EMAIL]) ||
+      normalizeString(payment && payment.payer && payment.payer.email) ||
+      "";
+
+    const updated = await updateMercadoPagoPaymentMetadata(normalizedPaymentId, {
+      [META.LICENSE_KEY]: licenseKey,
+      [META.LICENSE_MAX]: String(DEFAULT_MAX_ACTIVATIONS),
+      [META.LICENSE_EMAIL]: email
+    });
+
+    payment.metadata = updated.metadata || metadata;
+  }
+
+  return {
+    statusCode: 200,
+    payload: {
+      ok: true,
+      reused: reused,
+      source: "mercadopago",
+      payment_id: normalizedPaymentId,
+      license: buildMercadoPagoLicensePayload(payment, payment.metadata || {})
     }
   };
 }
@@ -857,10 +916,17 @@ module.exports = async function handler(req, res) {
   try {
     if (action === "generate") {
       const sessionId = normalizeString((req.query && req.query.session_id) || body.session_id);
-      if (!sessionId) {
-        return res.status(400).json({ error: "session_id is required." });
+      const paymentId = normalizeString((req.query && req.query.payment_id) || body.payment_id);
+
+      if (paymentId) {
+        const mpResult = await handleGenerateMercadoPago(paymentId);
+        return res.status(mpResult.statusCode).json(mpResult.payload);
       }
-      const result = await handleGenerate(sessionId);
+
+      if (!sessionId) {
+        return res.status(400).json({ error: "session_id or payment_id is required." });
+      }
+      const result = await handleGenerateStripe(sessionId);
       return res.status(result.statusCode).json(result.payload);
     }
 

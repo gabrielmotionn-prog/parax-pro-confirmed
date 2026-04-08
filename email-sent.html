@@ -293,6 +293,7 @@
       const keyHint = document.getElementById("keyHint");
       const params = new URLSearchParams(window.location.search);
       const sessionId = String(params.get("session_id") || "").trim();
+      const paymentId = String(params.get("payment_id") || "").trim();
 
       function showKey(key) {
         keyValue.textContent = key;
@@ -312,11 +313,11 @@
         }
       }
 
-      generateBtn.addEventListener("click", async function () {
-        if (!sessionId) {
+      async function generateKeyFromPurchase() {
+        if (!sessionId && !paymentId) {
           keyBox.classList.add("show");
-          keyValue.textContent = "Session ID not found";
-          keyHint.textContent = "Open this page from the payment success link (with session_id).";
+          keyValue.textContent = "Purchase reference not found";
+          keyHint.textContent = "Open this page from the payment success link (with session_id or payment_id).";
           return;
         }
 
@@ -332,7 +333,8 @@
             },
             body: JSON.stringify({
               action: "generate",
-              session_id: sessionId
+              session_id: sessionId || undefined,
+              payment_id: paymentId || undefined
             })
           });
 
@@ -361,12 +363,20 @@
         } finally {
           generateBtn.disabled = false;
         }
+      }
+
+      generateBtn.addEventListener("click", function () {
+        generateKeyFromPurchase();
       });
 
       const existingKey = localStorage.getItem(STORAGE_KEY);
       if (existingKey) {
         showKey(existingKey);
         keyHint.textContent = "A previously generated key is saved in this browser.";
+      }
+
+      if (sessionId || paymentId) {
+        generateKeyFromPurchase();
       }
     })();
   </script>

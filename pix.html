@@ -280,6 +280,8 @@
       var LANGUAGE_KEY = "parax_pro_lang_v1";
       var SESSION_KEY = "parax_pro_session_v1";
       var ENDPOINT = "/api/mercadopago-pix";
+      var LICENSE_ENDPOINT = "/api/license";
+      var POLL_INTERVAL_MS = 5000;
 
       var qrImage = document.getElementById("qrImage");
       var qrLoadingText = document.getElementById("qrLoadingText");
@@ -293,6 +295,8 @@
       var paymentText = document.getElementById("paymentText");
 
       var currentPayload = null;
+      var currentPaymentId = "";
+      var pollTimer = null;
 
       var texts = {
         en: {
@@ -313,7 +317,11 @@
           copied: "PIX code copied.",
           copyError: "Unable to copy now.",
           noEmail: "Login required. Please sign in on homepage first.",
-          fail: "Unable to create PIX QR code right now."
+          fail: "Unable to create PIX QR code right now.",
+          checking: "Checking payment status...",
+          waiting: "Waiting for PIX approval...",
+          approved: "Payment approved! Redirecting...",
+          statusFail: "Unable to verify payment status right now."
         },
         es: {
           badge: "Checkout PIX directo",
@@ -333,7 +341,11 @@
           copied: "Codigo PIX copiado.",
           copyError: "No se pudo copiar ahora.",
           noEmail: "Se requiere login. Inicia sesion en la home primero.",
-          fail: "No se pudo crear el QR PIX ahora."
+          fail: "No se pudo crear el QR PIX ahora.",
+          checking: "Verificando estado del pago...",
+          waiting: "Esperando aprobacion del PIX...",
+          approved: "Pago aprobado. Redirigiendo...",
+          statusFail: "No se pudo verificar el estado del pago ahora."
         },
         pt: {
           badge: "Checkout PIX direto",
@@ -353,7 +365,11 @@
           copied: "Codigo PIX copiado.",
           copyError: "Nao foi possivel copiar agora.",
           noEmail: "Login necessario. Entre na home primeiro.",
-          fail: "Nao foi possivel gerar o QR PIX agora."
+          fail: "Nao foi possivel gerar o QR PIX agora.",
+          checking: "Verificando status do pagamento...",
+          waiting: "Aguardando aprovacao do PIX...",
+          approved: "Pagamento aprovado! Redirecionando...",
+          statusFail: "Nao foi possivel verificar o status do pagamento agora."
         }
       };
 
@@ -400,9 +416,88 @@
         expiresText.textContent = t("expires", { value: formatDate(payload.expires_at) });
         paymentText.textContent = t("payment", { value: payload.payment_id || "-" });
         setLoading(false);
+        beginStatusWatch(payload.payment_id);
+      }
+
+      function clearStatusWatch() {
+        if (pollTimer) {
+          window.clearTimeout(pollTimer);
+          pollTimer = null;
+        }
+        currentPaymentId = "";
+      }
+
+      function scheduleStatusPoll(delayMs) {
+        if (!currentPaymentId) return;
+        if (pollTimer) {
+          window.clearTimeout(pollTimer);
+        }
+        pollTimer = window.setTimeout(checkPaymentStatus, Number(delayMs) || POLL_INTERVAL_MS);
+      }
+
+      async function checkPaymentStatus() {
+        if (!currentPaymentId) return;
+
+        try {
+          var response = await fetch(
+            LICENSE_ENDPOINT +
+              "?action=generate&payment_id=" +
+              encodeURIComponent(currentPaymentId),
+            {
+              method: "GET",
+              cache: "no-store"
+            }
+          );
+
+          var payload = await response.json().catch(function () {
+            return {};
+          });
+
+          if (response.status === 402) {
+            setStatus(t("waiting"), "");
+            scheduleStatusPoll(POLL_INTERVAL_MS);
+            return;
+          }
+
+          if (!response.ok) {
+            throw new Error(payload.error || t("statusFail"));
+          }
+
+          if (payload && payload.ok && payload.license && payload.license.license_key) {
+            setStatus(t("approved"), "ok");
+            window.setTimeout(function () {
+              window.location.href =
+                "/email-sent.html?payment_id=" +
+                encodeURIComponent(currentPaymentId);
+            }, 900);
+            return;
+          }
+
+          setStatus(t("waiting"), "");
+          scheduleStatusPoll(POLL_INTERVAL_MS);
+        } catch (error) {
+          setStatus(error.message || t("statusFail"), "error");
+          scheduleStatusPoll(POLL_INTERVAL_MS * 2);
+        }
+      }
+
+      function beginStatusWatch(paymentId) {
+        if (pollTimer) {
+          window.clearTimeout(pollTimer);
+          pollTimer = null;
+        }
+
+        currentPaymentId = String(paymentId || "").trim();
+        if (!currentPaymentId) {
+          return;
+        }
+
+        setStatus(t("checking"), "");
+        scheduleStatusPoll(1500);
       }
 
       async function generatePix() {
+        clearStatusWatch();
         setStatus("", "");
         setLoading(true);
 
@@ -471,6 +566,8 @@
       newCodeBtn.addEventListener("click", function () {
         generatePix();
       });
+
+      window.addEventListener("beforeunload", clearStatusWatch);
 
       applyI18n();
       generatePix();
