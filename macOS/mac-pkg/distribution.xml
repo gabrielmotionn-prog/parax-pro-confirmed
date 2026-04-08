@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+  <title>ParaX Pro</title>
+  <options customize="never" require-scripts="true"/>
+  <welcome file="welcome.html" mime-type="text/html"/>
+  <license file="license.txt"/>
+
+  <choices-outline>
+    <line choice="default">
+      <line choice="paraxpro"/>
+    </line>
+  </choices-outline>
+
+  <choice id="default"/>
+  <choice id="paraxpro" title="ParaX Pro" visible="false">
+    <pkg-ref id="com.paraxpro.installer.component"/>
+  </choice>
+
+  <pkg-ref id="com.paraxpro.installer.component" version="5.7" onConclusion="none">ParaX Pro Component.pkg</pkg-ref>
+</installer-gui-script>

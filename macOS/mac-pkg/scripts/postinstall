@@ -1,0 +1,46 @@
+#!/bin/bash
+set -euo pipefail
+
+PANEL_SOURCE="/Library/Application Support/ParaX Pro Installer/ParaX Pro.jsxbin"
+HEADER_LOGO_SOURCE="/Library/Application Support/ParaX Pro Installer/ParaX Pro Header Logo.png"
+PSEUDO_SOURCE="/Library/Application Support/ParaX Pro Installer/PU_Settings_v11.xml"
+
+find_after_effects_apps() {
+  find /Applications -maxdepth 3 -type d -name "Adobe After Effects*.app" 2>/dev/null | sort
+}
+
+install_into_app() {
+  local app_path="$1"
+  local panel_dir="$app_path/Contents/Resources/Scripts/ScriptUI Panels"
+  local xml_path="$app_path/Contents/Resources/PresetEffects.xml"
+
+  [ -f "$xml_path" ] || return 0
+
+  mkdir -p "$panel_dir"
+  cp "$PANEL_SOURCE" "$panel_dir/ParaX Pro.jsxbin"
+  cp "$HEADER_LOGO_SOURCE" "$panel_dir/ParaX Pro Header Logo.png"
+
+  if [ ! -f "$xml_path.bak" ]; then
+    cp "$xml_path" "$xml_path.bak"
+  fi
+
+  /usr/bin/perl -0pe '
+    BEGIN {
+      local $/;
+      open my $fh, "<", $ENV{"PARAX_PSEUDO_SOURCE"} or die "Unable to read pseudo XML";
+      $xml = <$fh>;
+      close $fh;
+    }
+    s#<Effect matchname="Pseudo/PU_Settings_v11".*?</Effect>\s*##sg;
+    s#</Effects>#\n$xml\n</Effects>#s or die "Closing </Effects> tag not found";
+  ' "$xml_path" > "$xml_path.parax_tmp"
+  mv "$xml_path.parax_tmp" "$xml_path"
+}
+
+export PARAX_PSEUDO_SOURCE="$PSEUDO_SOURCE"
+
+while IFS= read -r app_path; do
+  [ -n "$app_path" ] && install_into_app "$app_path"
+done < <(find_after_effects_apps)
+
+exit 0

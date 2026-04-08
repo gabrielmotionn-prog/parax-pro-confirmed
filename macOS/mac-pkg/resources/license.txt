@@ -1,0 +1,12 @@
+ParaX Pro
+
+This installer copies the ParaX Pro panel into Adobe After Effects
+and installs the PU | Settings pseudo-effect into PresetEffects.xml.
+
+Before installing:
+- Close Adobe After Effects
+- Proceed only if you have permission to modify the application files
+
+After installation:
+- Reopen Adobe After Effects
+- Open the panel in Window > ParaX Pro

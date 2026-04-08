@@ -1,0 +1,42 @@
+﻿<Effect matchname="Pseudo/PU_Settings_v11" name="$$$/AE/Preset/PUSettingsV11=PU | Settings">
+  <Group name="$$$/AE/Preset/PUGrpCamPos=Camera Position">
+    <Slider name="$$$/AE/Preset/PUPosX=Position X"  default="0" valid_min="-99999" valid_max="99999" slider_min="-5000" slider_max="5000" precision="2"/>
+    <Slider name="$$$/AE/Preset/PUPosY=Position Y"  default="0" valid_min="-99999" valid_max="99999" slider_min="-5000" slider_max="5000" precision="2"/>
+    <Slider name="$$$/AE/Preset/PUPosZ=Position Z"  default="0" valid_min="-99999" valid_max="99999" slider_min="-5000" slider_max="5000" precision="2"/>
+  </Group>
+  <Group name="$$$/AE/Preset/PUGrpCamRot=Camera Rotation">
+    <Slider name="$$$/AE/Preset/PURotX=Rotation X"  default="0" valid_min="-9999" valid_max="9999" slider_min="-1080" slider_max="1080" precision="2"/>
+    <Slider name="$$$/AE/Preset/PURotY=Rotation Y"  default="0" valid_min="-9999" valid_max="9999" slider_min="-1080" slider_max="1080" precision="2"/>
+    <Slider name="$$$/AE/Preset/PURotZ=Rotation Z"  default="0" valid_min="-9999" valid_max="9999" slider_min="-1080" slider_max="1080" precision="2"/>
+  </Group>
+  <Group name="$$$/AE/Preset/PUGrpAutoMov=Auto Movement">
+    <Slider name="$$$/AE/Preset/PUAutoPX=Auto Position X" default="0" valid_min="-99999" valid_max="99999" slider_min="-1000" slider_max="1000" precision="2"/>
+    <Slider name="$$$/AE/Preset/PUAutoPY=Auto Position Y" default="0" valid_min="-99999" valid_max="99999" slider_min="-1000" slider_max="1000" precision="2"/>
+    <Slider name="$$$/AE/Preset/PUAutoPZ=Auto Position Z" default="0" valid_min="-99999" valid_max="99999" slider_min="-1000" slider_max="1000" precision="2"/>
+    <Slider name="$$$/AE/Preset/PUAutoRX=Auto Rotation X" default="0" valid_min="-9999" valid_max="9999" slider_min="-1080" slider_max="1080" precision="2"/>
+    <Slider name="$$$/AE/Preset/PUAutoRY=Auto Rotation Y" default="0" valid_min="-9999" valid_max="9999" slider_min="-1080" slider_max="1080" precision="2"/>
+    <Slider name="$$$/AE/Preset/PUAutoRZ=Auto Rotation Z" default="0" valid_min="-9999" valid_max="9999" slider_min="-1080" slider_max="1080" precision="2"/>
+  </Group>
+  <Group name="$$$/AE/Preset/PUGrpLens=Lens Options">
+    <Slider name="$$$/AE/Preset/PUFocal=Focal Length (mm)" default="35" valid_min="1" valid_max="999" slider_min="10" slider_max="200" precision="0"/>
+    <Slider name="$$$/AE/Preset/PUZoomOff=Zoom Offset" default="0" valid_min="-9999" valid_max="9999" slider_min="-500" slider_max="500" precision="2"/>
+  </Group>
+  <Group name="$$$/AE/Preset/PUGrpFocus=Focus Control">
+    <Checkbox name="$$$/AE/Preset/PUDOFEnable=Enable (DOF)" checked="false"/>
+    <Slider name="$$$/AE/Preset/PUFocusTarget=Focus Target" default="0" valid_min="0" valid_max="100" slider_min="0" slider_max="100" precision="2"/>
+    <Layer name="$$$/AE/Preset/PUFocusL1=Focus Layer 1" default_self="false"/>
+    <Layer name="$$$/AE/Preset/PUFocusL2=Focus Layer 2" default_self="false"/>
+    <Layer name="$$$/AE/Preset/PUFocusL3=Focus Layer 3" default_self="false"/>
+    <Layer name="$$$/AE/Preset/PUFocusL4=Focus Layer 4" default_self="false"/>
+    <Layer name="$$$/AE/Preset/PUFocusL5=Focus Layer 5" default_self="false"/>
+    <Slider name="$$$/AE/Preset/PUAperture=Aperture" default="100" valid_min="0" valid_max="1000" slider_min="0" slider_max="1000" precision="0"/>
+    <Slider name="$$$/AE/Preset/PUBlur=Blur" default="100" valid_min="0" valid_max="1000" slider_min="0" slider_max="1000" precision="0"/>
+    <Slider name="$$$/AE/Preset/PUFocusDist=Focus Distance" default="2666" valid_min="0" valid_max="99999" slider_min="0" slider_max="5000" precision="0"/>
+  </Group>
+  <Group name="$$$/AE/Preset/PUGrpShake=Camera Shake">
+    <Popup name="$$$/AE/Preset/PUShakePreset=Presets" default="1" CANNOT_TIME_VARY="true" popup_string="None|Light|Medium|Intense|-|Smooth Light|Smooth Medium|Smooth Intense"/>
+    <Slider name="$$$/AE/Preset/PUShakeInt=Intensity" default="100" valid_min="0" valid_max="200" slider_min="0" slider_max="200" precision="0"/>
+    <Slider name="$$$/AE/Preset/PUShakeSpd=Speed" default="100" valid_min="0" valid_max="200" slider_min="0" slider_max="200" precision="0"/>
+    <Slider name="$$$/AE/Preset/PUShakeSeed=Random Seed" default="1" valid_min="0" valid_max="9999" slider_min="0" slider_max="100" precision="0"/>
+  </Group>
+</Effect>
