@@ -1,1 +1,26 @@
+name: Build Mac Installer
 
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-mac-installer:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build PKG
+        run: |
+          chmod +x "macOS/mac-pkg/build-mac-pkg.sh"
+          bash "macOS/mac-pkg/build-mac-pkg.sh"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Parax-Pro-Mac-Installer
+          path: "macOS/ParaX-Pro-Mac-Installer-v*.pkg"
