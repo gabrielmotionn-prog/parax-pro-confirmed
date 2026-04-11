@@ -1577,7 +1577,8 @@
     }
 
     .ba-base,
-    .ba-overlay img {
+    .ba-overlay img,
+    .ba-overlay video {
       width: 100%;
       display: block;
       aspect-ratio: 16 / 9;
@@ -1591,8 +1592,8 @@
       overflow: hidden;
     }
 
-    .ba-overlay img {
-      filter: grayscale(1) brightness(0.58);
+    .ba-overlay img,
+    .ba-overlay video {
       width: 100%;
       height: 100%;
     }
@@ -2512,9 +2513,15 @@
         <p data-i18n="demo.desc">Space ready for your visual demo. Drag the slider to see the contrast.</p>
       </div>
       <div class="ba-shell">
-        <img class="ba-base" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80" alt="After with ParaX Pro" data-i18n-alt="demo.alt_after">
+        <video class="ba-base" id="baAfterVideo" autoplay muted loop playsinline preload="metadata" aria-label="After with ParaX Pro" data-i18n-aria-label="demo.alt_after">
+          <source src="depois.mp4" type="video/mp4">
+          Your browser does not support HTML5 video playback.
+        </video>
         <div class="ba-overlay" id="baOverlay">
-          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80" alt="Before" data-i18n-alt="demo.alt_before">
+          <video id="baBeforeVideo" autoplay muted loop playsinline preload="metadata" aria-label="Before" data-i18n-aria-label="demo.alt_before">
+            <source src="antes.mp4" type="video/mp4">
+            Your browser does not support HTML5 video playback.
+          </video>
         </div>
         <div class="ba-handle" id="baHandle"></div>
         <span class="ba-label before" data-i18n="demo.before">Before</span>
@@ -2783,12 +2790,51 @@
       var input = document.getElementById("baInput");
       var overlay = document.getElementById("baOverlay");
       var handle = document.getElementById("baHandle");
+      var beforeVideo = document.getElementById("baBeforeVideo");
+      var afterVideo = document.getElementById("baAfterVideo");
       if (!input || !overlay || !handle) return;
 
       function update() {
         var value = input.value + "%";
         overlay.style.width = value;
         handle.style.left = value;
+      }
+
+      function safePlay(videoEl) {
+        if (!videoEl) return;
+        var promise = videoEl.play();
+        if (promise && typeof promise.catch === "function") {
+          promise.catch(function () {});
+        }
+      }
+
+      function keepBeforeAfterSynced() {
+        if (!beforeVideo || !afterVideo) return;
+        var drift = Math.abs((beforeVideo.currentTime || 0) - (afterVideo.currentTime || 0));
+        if (drift > 0.12) {
+          try {
+            beforeVideo.currentTime = afterVideo.currentTime;
+          } catch (e) {}
+        }
+      }
+
+      if (beforeVideo && afterVideo) {
+        afterVideo.addEventListener("timeupdate", keepBeforeAfterSynced);
+        afterVideo.addEventListener("play", function () {
+          keepBeforeAfterSynced();
+          safePlay(beforeVideo);
+        });
+        beforeVideo.addEventListener("play", function () {
+          safePlay(afterVideo);
+        });
+        afterVideo.addEventListener("pause", function () {
+          if (!beforeVideo.paused) beforeVideo.pause();
+        });
+        beforeVideo.addEventListener("pause", function () {
+          if (!afterVideo.paused) afterVideo.pause();
+        });
+        safePlay(afterVideo);
+        safePlay(beforeVideo);
       }
 
       input.addEventListener("input", update);
