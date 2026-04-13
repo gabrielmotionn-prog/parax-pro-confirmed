@@ -296,6 +296,33 @@
         grid-template-columns: 1fr;
       }
     }
+  
+    .demo-badge {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 9999;
+      border: 1px solid rgba(250, 204, 21, 0.55);
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: rgba(31, 24, 10, 0.78);
+      color: #fde68a;
+      font: 700 0.72rem/1 "Space Grotesk", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
+    }
+
+    @media (max-width: 640px) {
+      .demo-badge {
+        top: 10px;
+        right: 10px;
+        padding: 5px 10px;
+        font-size: 0.66rem;
+      }
+    }
   </style>
 
   <!-- Google tag (gtag.js) -->
@@ -309,6 +336,7 @@
   </script>
 </head>
 <body>
+  <div class="demo-badge" role="note" aria-label="Demo notice">DEMO VERSION</div>
   <main class="wrap">
     <section class="panel" aria-labelledby="accessReadyTitle">
       <div class="content">
