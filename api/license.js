@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const { methodNotAllowed, readJsonBody } = require("./_lib/http");
+const { methodNotAllowed, readJsonBody } = require("../lib/http");
 
 const STRIPE_API_BASE = "https://api.stripe.com/v1";
 const MERCADOPAGO_API_BASE = "https://api.mercadopago.com";

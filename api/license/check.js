@@ -1,8 +1,8 @@
-const { methodNotAllowed, readJsonBody } = require("../_lib/http");
+const { methodNotAllowed, readJsonBody } = require("../../lib/http");
 const {
   checkLicenseToken,
   licenseResponsePayload
-} = require("../_lib/license-store");
+} = require("../../lib/license-store");
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {

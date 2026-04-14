@@ -1,5 +1,5 @@
-const { readJsonBody } = require("./_lib/http");
-const { applyCoupon } = require("./_lib/coupon");
+const { readJsonBody } = require("../lib/http");
+const { applyCoupon } = require("../lib/coupon");
 
 const MP_API_BASE = "https://api.mercadopago.com";
 

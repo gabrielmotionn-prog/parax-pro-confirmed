@@ -1,9 +1,9 @@
-const { methodNotAllowed, readJsonBody } = require("./_lib/http");
+const { methodNotAllowed, readJsonBody } = require("../lib/http");
 const {
   createLicenseFromSession,
   getLicenseBySessionId,
   licenseResponsePayload
-} = require("./_lib/license-store");
+} = require("../lib/license-store");
 
 async function fetchStripeCheckoutSession(sessionId, stripeSecretKey) {
   const encodedSessionId = encodeURIComponent(sessionId);
