@@ -2209,6 +2209,12 @@
       letter-spacing: 0.04em;
     }
 
+    .pay-coupon input.pay-email-input {
+      text-transform: none;
+      letter-spacing: normal;
+      font-family: "Plus Jakarta Sans", sans-serif;
+    }
+
     .pay-coupon input:focus {
       outline: none;
       border-color: rgba(167, 139, 250, 0.82);
@@ -2783,54 +2789,6 @@
     <footer data-i18n="footer.text">ParaX Pro - Premium plugin for cinematic depth in After Effects.</footer>
   </div>
 
-  <div class="auth-backdrop" id="authBackdrop" aria-hidden="true">
-    <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-      <button class="auth-close" id="authCloseBtn" type="button" data-i18n="auth.close">Close</button>
-      <p class="tag" data-i18n="auth.tag">Customer area</p>
-      <h3 id="authTitle" data-i18n="auth.title">Sign in or create your account</h3>
-
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tabLogin" type="button" data-i18n="auth.tab_login">Login</button>
-        <button class="auth-tab" id="tabSignup" type="button" data-i18n="auth.tab_signup">Sign up</button>
-      </div>
-
-      <form class="auth-form active" id="loginForm" autocomplete="on">
-        <div class="field">
-          <label for="loginEmail" data-i18n="auth.email">Email</label>
-          <input id="loginEmail" name="email" type="email" required>
-        </div>
-        <div class="field">
-          <label for="loginPassword" data-i18n="auth.password">Password</label>
-          <input id="loginPassword" name="password" type="password" minlength="6" required>
-        </div>
-        <button class="auth-submit" type="submit" data-i18n="auth.login_submit">Sign in</button>
-      </form>
-
-      <form class="auth-form" id="signupForm" autocomplete="on">
-        <div class="field">
-          <label for="signupName" data-i18n="auth.name">Name</label>
-          <input id="signupName" name="name" type="text" minlength="2" required>
-        </div>
-        <div class="field">
-          <label for="signupEmail" data-i18n="auth.email">Email</label>
-          <input id="signupEmail" name="email" type="email" required>
-        </div>
-        <div class="field">
-          <label for="signupPassword" data-i18n="auth.password">Password</label>
-          <input id="signupPassword" name="password" type="password" minlength="6" required>
-        </div>
-        <div class="field">
-          <label for="signupPasswordConfirm" data-i18n="auth.confirm_password">Confirm password</label>
-          <input id="signupPasswordConfirm" name="passwordConfirm" type="password" minlength="6" required>
-        </div>
-        <button class="auth-submit" type="submit" data-i18n="auth.signup_submit">Create account</button>
-      </form>
-
-      <p class="auth-message" id="authMessage" data-type="" aria-live="polite"></p>
-      <p class="auth-note" data-i18n="auth.note">Accounts are saved in this browser (local version of the landing page).</p>
-    </div>
-  </div>
-
   <div class="pay-backdrop" id="paymentBackdrop" aria-hidden="true">
     <div class="pay-modal" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
       <button class="auth-close pay-close" id="paymentCloseBtn" type="button" aria-label="Close" data-i18n-aria-label="pay.close">&times;</button>
@@ -2860,6 +2818,11 @@
           </span>
           <span class="pay-option-arrow" aria-hidden="true">›</span>
         </button>
+      </div>
+
+      <div class="pay-coupon">
+        <label for="paymentEmail" data-i18n="pay.email_label">Delivery email</label>
+        <input id="paymentEmail" class="pay-email-input" type="email" placeholder="Delivery email" data-i18n-placeholder="pay.email_placeholder" autocomplete="email" spellcheck="false" maxlength="120">
       </div>
 
       <div class="pay-coupon">
@@ -3288,6 +3251,10 @@
           "pay.stripe_desc": "Fast approval with international cards.",
           "pay.pix_title": "PIX",
           "pay.pix_desc": "Pay via PIX and receive your key by email after confirmation.",
+          "pay.email_label": "Delivery email",
+          "pay.email_placeholder": "your@email.com",
+          "pay.email_invalid": "Please enter a valid email address.",
+          "pay.email_required_pix": "Please enter your email to continue with PIX.",
           "pay.coupon_label": "Discount coupon",
           "pay.coupon_placeholder": "Discount coupon",
           "pay.cancel": "Cancel",
@@ -3426,6 +3393,10 @@
           "pay.stripe_desc": "Aprobacion rapida con tarjetas internacionales.",
           "pay.pix_title": "PIX",
           "pay.pix_desc": "Paga por PIX y recibe tu clave por correo tras la confirmacion.",
+          "pay.email_label": "Correo para entrega",
+          "pay.email_placeholder": "tu@email.com",
+          "pay.email_invalid": "Ingresa un correo valido.",
+          "pay.email_required_pix": "Ingresa tu correo para continuar con PIX.",
           "pay.coupon_label": "Cupon de descuento",
           "pay.coupon_placeholder": "Cupon de descuento",
           "pay.cancel": "Cancelar",
@@ -3564,6 +3535,10 @@
           "pay.stripe_desc": "Aprovacao rapida com cartoes internacionais.",
           "pay.pix_title": "PIX",
           "pay.pix_desc": "Pague por PIX e receba sua chave por e-mail apos a confirmacao.",
+          "pay.email_label": "E-mail para entrega",
+          "pay.email_placeholder": "seu@email.com",
+          "pay.email_invalid": "Informe um e-mail valido.",
+          "pay.email_required_pix": "Informe seu e-mail para continuar com PIX.",
           "pay.coupon_label": "Cupom de desconto",
           "pay.coupon_placeholder": "Cupom de desconto",
           "pay.cancel": "Cancelar",
@@ -3724,23 +3699,13 @@
     })();
 
     (function () {
-      var USERS_KEY = "parax_pro_users_v1";
-      var SESSION_KEY = "parax_pro_session_v1";
-      var authBackdrop = document.getElementById("authBackdrop");
+      var CHECKOUT_EMAIL_KEY = "parax_checkout_email_v1";
       var buyLinks = document.querySelectorAll(".js-buy-link");
-      var authCloseBtn = document.getElementById("authCloseBtn");
-      var tabLogin = document.getElementById("tabLogin");
-      var tabSignup = document.getElementById("tabSignup");
-      var loginForm = document.getElementById("loginForm");
-      var signupForm = document.getElementById("signupForm");
-      var authMessage = document.getElementById("authMessage");
-      var userChip = document.getElementById("userChip");
-      var userChipName = document.getElementById("userChipName");
-      var logoutBtn = document.getElementById("logoutBtn");
       var paymentBackdrop = document.getElementById("paymentBackdrop");
       var paymentCloseBtn = document.getElementById("paymentCloseBtn");
       var paymentCancelBtn = document.getElementById("paymentCancelBtn");
       var paymentContinueBtn = document.getElementById("paymentContinueBtn");
+      var paymentEmailInput = document.getElementById("paymentEmail");
       var paymentCouponInput = document.getElementById("paymentCoupon");
       var paymentOptions = Array.prototype.slice.call(document.querySelectorAll("[data-pay-method]"));
       var pendingCheckoutHref = "";
@@ -3751,7 +3716,7 @@
       var PIX_CHECKOUT_URL = "/pix.html";
       var MERCADOPAGO_CHECKOUT_ENDPOINT = "/api/mercadopago-checkout";
 
-      if (!authBackdrop || !loginForm || !signupForm) return;
+      if (!buyLinks.length) return;
 
       function t(key, vars) {
         if (window.ParaxI18n && typeof window.ParaxI18n.translate === "function") {
@@ -3764,92 +3729,37 @@
         return String(value || "").trim().toLowerCase();
       }
 
+      function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ""));
+      }
+
       function normalizeCouponCode(value) {
         return String(value || "").trim().toUpperCase();
+      }
+
+      function getCheckoutEmail() {
+        if (!paymentEmailInput) return "";
+        return normalizeEmail(paymentEmailInput.value);
+      }
+
+      function rememberCheckoutEmail(email) {
+        var normalized = normalizeEmail(email);
+        if (normalized) {
+          localStorage.setItem(CHECKOUT_EMAIL_KEY, normalized);
+        }
+      }
+
+      function hydrateCheckoutEmail() {
+        if (!paymentEmailInput) return;
+        var storedEmail = normalizeEmail(localStorage.getItem(CHECKOUT_EMAIL_KEY));
+        if (storedEmail) {
+          paymentEmailInput.value = storedEmail;
+        }
       }
 
       function getCouponCode() {
         if (!paymentCouponInput) return "";
         return normalizeCouponCode(paymentCouponInput.value);
-      }
-
-      function readUsers() {
-        try {
-          var raw = localStorage.getItem(USERS_KEY);
-          var data = JSON.parse(raw || "[]");
-          return Array.isArray(data) ? data : [];
-        } catch (err) {
-          return [];
-        }
-      }
-
-      function saveUsers(users) {
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-      }
-
-      function getSessionEmail() {
-        return normalizeEmail(localStorage.getItem(SESSION_KEY));
-      }
-
-      function setSessionEmail(email) {
-        localStorage.setItem(SESSION_KEY, normalizeEmail(email));
-      }
-
-      function clearSession() {
-        localStorage.removeItem(SESSION_KEY);
-      }
-
-      function setMessage(text, type) {
-        authMessage.textContent = text || "";
-        authMessage.setAttribute("data-type", type || "");
-      }
-
-      function isValidEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-      }
-
-      function fallbackHash(input) {
-        var hash = 0;
-        var i;
-        for (i = 0; i < input.length; i += 1) {
-          hash = (hash << 5) - hash + input.charCodeAt(i);
-          hash |= 0;
-        }
-        return String(hash);
-      }
-
-      async function hashPassword(password) {
-        if (window.crypto && window.crypto.subtle && window.TextEncoder) {
-          var encoded = new TextEncoder().encode(password);
-          var digest = await window.crypto.subtle.digest("SHA-256", encoded);
-          return Array.from(new Uint8Array(digest)).map(function (value) {
-            return value.toString(16).padStart(2, "0");
-          }).join("");
-        }
-        return fallbackHash(password);
-      }
-
-      function switchTab(type) {
-        var loginActive = type === "login";
-        tabLogin.classList.toggle("active", loginActive);
-        tabSignup.classList.toggle("active", !loginActive);
-        loginForm.classList.toggle("active", loginActive);
-        signupForm.classList.toggle("active", !loginActive);
-        setMessage("", "");
-      }
-
-      function openModal(type) {
-        switchTab(type || "login");
-        authBackdrop.classList.add("show");
-        authBackdrop.setAttribute("aria-hidden", "false");
-      }
-
-      function closeModal() {
-        authBackdrop.classList.remove("show");
-        authBackdrop.setAttribute("aria-hidden", "true");
-        loginForm.reset();
-        signupForm.reset();
-        setMessage("", "");
       }
 
       function getPreferredPaymentMethodByLanguage() {
@@ -3929,21 +3839,44 @@
 
       async function continueToCheckout() {
         var couponCode = getCouponCode();
+        var checkoutEmail = getCheckoutEmail();
+
+        if (checkoutEmail && !isValidEmail(checkoutEmail)) {
+          alert(t("pay.email_invalid"));
+          if (paymentEmailInput) paymentEmailInput.focus();
+          return;
+        }
+
+        if (selectedPaymentMethod === "pix" && !checkoutEmail) {
+          alert(t("pay.email_required_pix"));
+          if (paymentEmailInput) paymentEmailInput.focus();
+          return;
+        }
+
+        if (checkoutEmail) {
+          rememberCheckoutEmail(checkoutEmail);
+        }
+
         var target = buildCheckoutTarget(pendingCheckoutHref, selectedPaymentMethod, couponCode);
         pendingCheckoutHref = "";
         closePaymentModal();
 
-        if (selectedPaymentMethod === "stripe" && couponCode) {
+        if (selectedPaymentMethod === "stripe") {
           try {
+            var stripeBody = {};
+            if (checkoutEmail) {
+              stripeBody.email = checkoutEmail;
+            }
+            if (couponCode) {
+              stripeBody.coupon_code = couponCode;
+            }
+
             var stripeResponse = await fetch(STRIPE_CHECKOUT_ENDPOINT, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
               },
-              body: JSON.stringify({
-                email: getSessionEmail(),
-                coupon_code: couponCode
-              })
+              body: JSON.stringify(stripeBody)
             });
 
             var stripePayload = await stripeResponse.json().catch(function () {
@@ -3957,7 +3890,7 @@
             window.location.href = stripePayload.checkout_url;
             return;
           } catch (error) {
-            alert(error.message || "Stripe checkout is not available right now.");
+            window.location.href = STRIPE_CHECKOUT_URL;
             return;
           }
         }
@@ -3970,7 +3903,7 @@
                 "Content-Type": "application/json"
               },
               body: JSON.stringify({
-                email: getSessionEmail(),
+                email: checkoutEmail,
                 coupon_code: couponCode || undefined
               })
             });
@@ -3994,119 +3927,24 @@
         window.location.href = target;
       }
 
-      function completePendingCheckout() {
-        if (!pendingCheckoutHref) return;
-        openPaymentModal(pendingCheckoutHref);
-      }
-
-      function findUserByEmail(email) {
-        var normalized = normalizeEmail(email);
-        return readUsers().find(function (user) {
-          return normalizeEmail(user.email) === normalized;
-        });
-      }
-
-      function compactDisplayName(name) {
-        var clean = String(name || "").trim().replace(/\s+/g, " ");
-        if (!clean) return "";
-
-        var parts = clean.split(" ");
-        var first = parts[0] || "";
-        var second = parts[1] || "";
-        var compact = first;
-
-        if (second && (first.length + second.length + 1) <= 16) {
-          compact = first + " " + second;
-        }
-
-        if (compact.length > 18) {
-          compact = compact.slice(0, 18).trim() + "...";
-        }
-
-        return compact;
-      }
-
-      function updateAuthUi() {
-        var currentEmail = getSessionEmail();
-        var user = currentEmail ? findUserByEmail(currentEmail) : null;
-        var isLogged = Boolean(user);
-
-        if (userChip) {
-          userChip.classList.toggle("show", isLogged);
-        }
-
-        if (isLogged) {
-          if (userChipName) {
-            var compactName = compactDisplayName(user.name);
-            userChipName.textContent = compactName ? t("user.hello", { name: compactName }) : t("user.active");
-            userChipName.title = user.name || "";
-          }
-        } else {
-          if (userChipName) {
-            userChipName.removeAttribute("title");
-          }
-          clearSession();
-        }
-      }
-
-      tabLogin.addEventListener("click", function () {
-        switchTab("login");
-      });
-
-      tabSignup.addEventListener("click", function () {
-        switchTab("signup");
-      });
-
       buyLinks.forEach(function (link) {
         link.addEventListener("click", function (event) {
-          var currentEmail = getSessionEmail();
-          var user = currentEmail ? findUserByEmail(currentEmail) : null;
           var checkoutHref = link.getAttribute("href") || "https://checkout.paraxpro.com";
-
-          if (user) {
-            event.preventDefault();
-            openPaymentModal(checkoutHref);
-            return;
-          }
-
           event.preventDefault();
-          pendingCheckoutHref = checkoutHref;
-          openModal("signup");
-          setMessage(t("auth.msg.need_account"), "");
+          openPaymentModal(checkoutHref);
         });
-      });
-
-      authCloseBtn.addEventListener("click", closeModal);
-
-      authBackdrop.addEventListener("click", function (event) {
-        if (event.target === authBackdrop) {
-          closeModal();
-        }
       });
 
       document.addEventListener("keydown", function (event) {
         if (event.key !== "Escape") return;
-        if (authBackdrop.classList.contains("show")) {
-          closeModal();
-        }
         if (paymentBackdrop && paymentBackdrop.classList.contains("show")) {
           closePaymentModal();
         }
       });
 
       document.addEventListener("parax:language-changed", function () {
-        updateAuthUi();
         setPaymentMethod(getPreferredPaymentMethodByLanguage());
       });
-
-      if (logoutBtn) {
-        logoutBtn.addEventListener("click", function () {
-          pendingCheckoutHref = "";
-          closePaymentModal();
-          clearSession();
-          updateAuthUi();
-        });
-      }
 
       if (paymentOptions.length) {
         paymentOptions.forEach(function (option) {
@@ -4136,98 +3974,8 @@
         });
       }
 
+      hydrateCheckoutEmail();
       setPaymentMethod(getPreferredPaymentMethodByLanguage());
-
-      signupForm.addEventListener("submit", async function (event) {
-        event.preventDefault();
-        setMessage("", "");
-
-        var name = String(document.getElementById("signupName").value || "").trim();
-        var email = normalizeEmail(document.getElementById("signupEmail").value);
-        var password = String(document.getElementById("signupPassword").value || "");
-        var passwordConfirm = String(document.getElementById("signupPasswordConfirm").value || "");
-
-        if (name.length < 2) {
-          setMessage(t("auth.msg.name_invalid"), "error");
-          return;
-        }
-
-        if (!isValidEmail(email)) {
-          setMessage(t("auth.msg.email_invalid"), "error");
-          return;
-        }
-
-        if (password.length < 6) {
-          setMessage(t("auth.msg.password_short"), "error");
-          return;
-        }
-
-        if (password !== passwordConfirm) {
-          setMessage(t("auth.msg.password_mismatch"), "error");
-          return;
-        }
-
-        var users = readUsers();
-        var exists = users.some(function (user) {
-          return normalizeEmail(user.email) === email;
-        });
-
-        if (exists) {
-          setMessage(t("auth.msg.email_exists"), "error");
-          return;
-        }
-
-        var passwordHash = await hashPassword(password);
-        users.push({
-          name: name,
-          email: email,
-          passwordHash: passwordHash,
-          createdAt: new Date().toISOString()
-        });
-        saveUsers(users);
-        setSessionEmail(email);
-        updateAuthUi();
-        setMessage(t("auth.msg.signup_success"), "success");
-        setTimeout(function () {
-          closeModal();
-          completePendingCheckout();
-        }, 550);
-      });
-
-      loginForm.addEventListener("submit", async function (event) {
-        event.preventDefault();
-        setMessage("", "");
-
-        var email = normalizeEmail(document.getElementById("loginEmail").value);
-        var password = String(document.getElementById("loginPassword").value || "");
-
-        if (!isValidEmail(email)) {
-          setMessage(t("auth.msg.email_invalid"), "error");
-          return;
-        }
-
-        var user = findUserByEmail(email);
-        if (!user) {
-          setMessage(t("auth.msg.account_not_found"), "error");
-          return;
-        }
-
-        var passwordHash = await hashPassword(password);
-        if (passwordHash !== user.passwordHash) {
-          setMessage(t("auth.msg.password_wrong"), "error");
-          return;
-        }
-
-        setSessionEmail(email);
-        updateAuthUi();
-        setMessage(t("auth.msg.login_success"), "success");
-        setTimeout(function () {
-          closeModal();
-          completePendingCheckout();
-        }, 450);
-      });
-
-      updateAuthUi();
     })();
   </script>
 </body>

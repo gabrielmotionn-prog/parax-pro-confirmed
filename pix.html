@@ -316,12 +316,13 @@
   <script>
     (function () {
       var LANGUAGE_KEY = "parax_pro_lang_v1";
-      var SESSION_KEY = "parax_pro_session_v1";
+      var CHECKOUT_EMAIL_KEY = "parax_checkout_email_v1";
       var ENDPOINT = "/api/mercadopago-pix";
       var LICENSE_ENDPOINT = "/api/license";
       var POLL_INTERVAL_MS = 5000;
       var URL_PARAMS = new URLSearchParams(window.location.search || "");
       var COUPON_CODE = String(URL_PARAMS.get("coupon") || "").trim().toUpperCase();
+      var EMAIL_PARAM = String(URL_PARAMS.get("email") || "").trim().toLowerCase();
 
       var qrImage = document.getElementById("qrImage");
       var qrLoadingText = document.getElementById("qrLoadingText");
@@ -356,7 +357,7 @@
           payment: "Payment ID: {{value}}",
           copied: "PIX code copied.",
           copyError: "Unable to copy now.",
-          noEmail: "Login required. Please sign in on homepage first.",
+          noEmail: "Please enter your email in checkout before paying with PIX.",
           fail: "Unable to create PIX QR code right now.",
           checking: "Checking payment status...",
           waiting: "Waiting for PIX approval...",
@@ -380,7 +381,7 @@
           payment: "ID de pago: {{value}}",
           copied: "Codigo PIX copiado.",
           copyError: "No se pudo copiar ahora.",
-          noEmail: "Se requiere login. Inicia sesion en la home primero.",
+          noEmail: "Ingresa tu correo en checkout antes de pagar con PIX.",
           fail: "No se pudo crear el QR PIX ahora.",
           checking: "Verificando estado del pago...",
           waiting: "Esperando aprobacion del PIX...",
@@ -404,7 +405,7 @@
           payment: "ID do pagamento: {{value}}",
           copied: "Codigo PIX copiado.",
           copyError: "Nao foi possivel copiar agora.",
-          noEmail: "Login necessario. Entre na home primeiro.",
+          noEmail: "Informe seu e-mail no checkout antes de pagar com PIX.",
           fail: "Nao foi possivel gerar o QR PIX agora.",
           checking: "Verificando status do pagamento...",
           waiting: "Aguardando aprovacao do PIX...",
@@ -541,7 +542,7 @@
         setStatus("", "");
         setLoading(true);
 
-        var email = String(localStorage.getItem(SESSION_KEY) || "").trim().toLowerCase();
+        var email = EMAIL_PARAM || String(localStorage.getItem(CHECKOUT_EMAIL_KEY) || "").trim().toLowerCase();
         if (!email) {
           setLoading(false);
           setStatus(t("noEmail"), "error");
