@@ -320,6 +320,8 @@
       var ENDPOINT = "/api/mercadopago-pix";
       var LICENSE_ENDPOINT = "/api/license";
       var POLL_INTERVAL_MS = 5000;
+      var URL_PARAMS = new URLSearchParams(window.location.search || "");
+      var COUPON_CODE = String(URL_PARAMS.get("coupon") || "").trim().toUpperCase();
 
       var qrImage = document.getElementById("qrImage");
       var qrLoadingText = document.getElementById("qrLoadingText");
@@ -550,7 +552,10 @@
           var response = await fetch(ENDPOINT, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: email })
+            body: JSON.stringify({
+              email: email,
+              coupon_code: COUPON_CODE || undefined
+            })
           });
 
           var payload = await response.json().catch(function () {

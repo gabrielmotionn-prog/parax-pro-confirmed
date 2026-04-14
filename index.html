@@ -2182,6 +2182,39 @@
       margin-bottom: 16px;
     }
 
+    .pay-coupon {
+      display: grid;
+      gap: 7px;
+      margin: 0 0 14px;
+    }
+
+    .pay-coupon label {
+      font-size: 0.8rem;
+      color: #c8bddf;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .pay-coupon input {
+      width: 100%;
+      border: 1px solid rgba(167, 139, 250, 0.35);
+      border-radius: 10px;
+      background: rgba(18, 12, 33, 0.88);
+      color: #f3eeff;
+      padding: 11px 12px;
+      font-size: 0.92rem;
+      font-family: "Space Grotesk", sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .pay-coupon input:focus {
+      outline: none;
+      border-color: rgba(167, 139, 250, 0.82);
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+    }
+
     .pay-option {
       border: 1px solid var(--line-soft);
       border-radius: 14px;
@@ -2829,6 +2862,11 @@
         </button>
       </div>
 
+      <div class="pay-coupon">
+        <label for="paymentCoupon" data-i18n="pay.coupon_label">Coupon code</label>
+        <input id="paymentCoupon" type="text" placeholder="MOTIONRANGERS" autocomplete="off" spellcheck="false" maxlength="32">
+      </div>
+
       <div class="pay-actions">
         <button class="pay-btn" id="paymentContinueBtn" type="button" data-i18n="pay.continue">Continue</button>
       </div>
@@ -3250,6 +3288,7 @@
           "pay.stripe_desc": "Fast approval with international cards.",
           "pay.pix_title": "PIX",
           "pay.pix_desc": "Pay via PIX and receive your key by email after confirmation.",
+          "pay.coupon_label": "Coupon code",
           "pay.cancel": "Cancel",
           "pay.continue": "Continue",
           "auth.close": "Close",
@@ -3386,6 +3425,7 @@
           "pay.stripe_desc": "Aprobacion rapida con tarjetas internacionales.",
           "pay.pix_title": "PIX",
           "pay.pix_desc": "Paga por PIX y recibe tu clave por correo tras la confirmacion.",
+          "pay.coupon_label": "Codigo de cupon",
           "pay.cancel": "Cancelar",
           "pay.continue": "Continuar",
           "auth.close": "Cerrar",
@@ -3522,6 +3562,7 @@
           "pay.stripe_desc": "Aprovacao rapida com cartoes internacionais.",
           "pay.pix_title": "PIX",
           "pay.pix_desc": "Pague por PIX e receba sua chave por e-mail apos a confirmacao.",
+          "pay.coupon_label": "Codigo do cupom",
           "pay.cancel": "Cancelar",
           "pay.continue": "Continuar",
           "auth.close": "Fechar",
@@ -3692,10 +3733,12 @@
       var paymentCloseBtn = document.getElementById("paymentCloseBtn");
       var paymentCancelBtn = document.getElementById("paymentCancelBtn");
       var paymentContinueBtn = document.getElementById("paymentContinueBtn");
+      var paymentCouponInput = document.getElementById("paymentCoupon");
       var paymentOptions = Array.prototype.slice.call(document.querySelectorAll("[data-pay-method]"));
       var pendingCheckoutHref = "";
       var selectedPaymentMethod = "stripe";
       var STRIPE_CHECKOUT_URL = "https://buy.stripe.com/3cI9AV4KL2Q21MP0XF2Ji02";
+      var STRIPE_CHECKOUT_ENDPOINT = "/api/stripe-checkout";
       // PIX now opens a direct QR code page (no payment method list).
       var PIX_CHECKOUT_URL = "/pix.html";
       var MERCADOPAGO_CHECKOUT_ENDPOINT = "/api/mercadopago-checkout";
@@ -3711,6 +3754,15 @@
 
       function normalizeEmail(value) {
         return String(value || "").trim().toLowerCase();
+      }
+
+      function normalizeCouponCode(value) {
+        return String(value || "").trim().toUpperCase();
+      }
+
+      function getCouponCode() {
+        if (!paymentCouponInput) return "";
+        return normalizeCouponCode(paymentCouponInput.value);
       }
 
       function readUsers() {
@@ -3833,9 +3885,10 @@
         paymentBackdrop.setAttribute("aria-hidden", "true");
       }
 
-      function buildCheckoutTarget(baseHref, method) {
+      function buildCheckoutTarget(baseHref, method, couponCode) {
         var safeBase = baseHref || "https://checkout.paraxpro.com";
         var safeMethod = method || "stripe";
+        var normalizedCoupon = normalizeCouponCode(couponCode);
 
         if (safeMethod === "stripe") {
           return STRIPE_CHECKOUT_URL;
@@ -3843,7 +3896,16 @@
 
         if (safeMethod === "pix") {
           if (PIX_CHECKOUT_URL) {
-            return PIX_CHECKOUT_URL;
+            if (!normalizedCoupon) {
+              return PIX_CHECKOUT_URL;
+            }
+            try {
+              var pixUrl = new URL(PIX_CHECKOUT_URL, window.location.origin);
+              pixUrl.searchParams.set("coupon", normalizedCoupon);
+              return pixUrl.href;
+            } catch (err) {
+              return PIX_CHECKOUT_URL + "?coupon=" + encodeURIComponent(normalizedCoupon);
+            }
           }
           return MERCADOPAGO_CHECKOUT_ENDPOINT;
         }
@@ -3858,9 +3920,39 @@
       }
 
       async function continueToCheckout() {
-        var target = buildCheckoutTarget(pendingCheckoutHref, selectedPaymentMethod);
+        var couponCode = getCouponCode();
+        var target = buildCheckoutTarget(pendingCheckoutHref, selectedPaymentMethod, couponCode);
         pendingCheckoutHref = "";
         closePaymentModal();
+
+        if (selectedPaymentMethod === "stripe" && couponCode) {
+          try {
+            var stripeResponse = await fetch(STRIPE_CHECKOUT_ENDPOINT, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                email: getSessionEmail(),
+                coupon_code: couponCode
+              })
+            });
+
+            var stripePayload = await stripeResponse.json().catch(function () {
+              return {};
+            });
+
+            if (!stripeResponse.ok || !stripePayload.checkout_url) {
+              throw new Error(stripePayload.error || "Stripe checkout is not available right now.");
+            }
+
+            window.location.href = stripePayload.checkout_url;
+            return;
+          } catch (error) {
+            alert(error.message || "Stripe checkout is not available right now.");
+            return;
+          }
+        }
 
         if (selectedPaymentMethod === "pix" && target === MERCADOPAGO_CHECKOUT_ENDPOINT) {
           try {
@@ -3870,7 +3962,8 @@
                 "Content-Type": "application/json"
               },
               body: JSON.stringify({
-                email: getSessionEmail()
+                email: getSessionEmail(),
+                coupon_code: couponCode || undefined
               })
             });
 

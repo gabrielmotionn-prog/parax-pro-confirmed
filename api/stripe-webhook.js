@@ -240,7 +240,11 @@ async function sendLicenseEmail(email, licenseKey) {
   const supportFromEmail =
     process.env.SUPPORT_FROM_EMAIL || "Parax Pro <onboarding@resend.dev>";
 
-  const activateUrl = "https://parax-pro-confirmed.vercel.app/email-sent.html";
+  const baseUrl =
+    (process.env.SITE_BASE_URL || process.env.PUBLIC_BASE_URL || "https://www.paraxpro.com")
+      .toString()
+      .replace(/\/+$/, "");
+  const activateUrl = baseUrl + "/email-sent.html";
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",

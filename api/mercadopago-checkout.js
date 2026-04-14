@@ -1,4 +1,5 @@
 const { readJsonBody } = require("./_lib/http");
+const { applyCoupon } = require("./_lib/coupon");
 
 const MP_API_BASE = "https://api.mercadopago.com";
 
@@ -52,7 +53,7 @@ function getBaseUrl(req) {
   if (explicit) return explicit.replace(/\/+$/, "");
   const host = req.headers["x-forwarded-host"] || req.headers.host || "";
   const proto = req.headers["x-forwarded-proto"] || "https";
-  return (host ? proto + "://" + host : "https://parax-pro-confirmed.vercel.app").replace(/\/+$/, "");
+  return (host ? proto + "://" + host : "https://www.paraxpro.com").replace(/\/+$/, "");
 }
 
 function createExternalRef() {
@@ -72,8 +73,24 @@ module.exports = async function handler(req, res) {
     const payerEmail = normalizeEmail(body.email);
     const baseUrl = getBaseUrl(req);
 
-    const amount = Number(process.env.PARAX_PRICE_BRL || 79);
+    const baseAmount = Number(process.env.PARAX_PRICE_BRL || 79);
+    const pricing = applyCoupon(baseAmount, body.coupon_code);
+    if (!pricing.ok) {
+      return res.status(400).json({ error: pricing.error || "Invalid coupon code." });
+    }
+    const amount = pricing.amount_after;
     const title = normalize(process.env.PARAX_PRODUCT_TITLE) || "Parax Pro - Lifetime License";
+    const metadata = {
+      source: "parax-site",
+      flow: "pix"
+    };
+
+    if (pricing.coupon_applied) {
+      metadata.coupon_code = pricing.coupon_code;
+      metadata.coupon_percent = String(pricing.discount_percent);
+      metadata.amount_before = String(pricing.amount_before);
+      metadata.discount_amount = String(pricing.discount_amount);
+    }
 
     const preferenceBody = {
       items: [
@@ -92,10 +109,7 @@ module.exports = async function handler(req, res) {
         pending: baseUrl + "/confirmed.html?source=mercadopago&status=pending"
       },
       notification_url: baseUrl + "/api/mercadopago-webhook",
-      metadata: {
-        source: "parax-site",
-        flow: "pix"
-      }
+      metadata: metadata
     };
 
     if (isValidEmail(payerEmail)) {
@@ -119,7 +133,13 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       checkout_url: checkoutUrl,
-      preference_id: preference.id || null
+      preference_id: preference.id || null,
+      amount: amount,
+      amount_before: pricing.amount_before,
+      discount_amount: pricing.discount_amount,
+      coupon_applied: pricing.coupon_applied,
+      coupon_code: pricing.coupon_applied ? pricing.coupon_code : "",
+      discount_percent: pricing.coupon_applied ? pricing.discount_percent : 0
     });
   } catch (error) {
     return res.status(Number(error.statusCode) || 500).json({
