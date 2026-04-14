@@ -90,7 +90,7 @@ module.exports = async function handler(req, res) {
 
     const baseUrl = getBaseUrl(req);
     const baseAmount = Number(process.env.PARAX_PRICE_BRL || 79);
-    const pricing = applyCoupon(baseAmount, body.coupon_code);
+    const pricing = applyCoupon(baseAmount, body.coupon_code, { currency: "brl" });
     if (!pricing.ok) {
       return res.status(400).json({ error: pricing.error || "Invalid coupon code." });
     }

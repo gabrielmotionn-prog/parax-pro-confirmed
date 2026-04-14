@@ -83,12 +83,12 @@ module.exports = async function handler(req, res) {
     const body = readJsonBody(req);
     const payerEmail = normalizeEmail(body.email);
     const baseAmount = Number(process.env.PARAX_PRICE_USD || 19);
-    const pricing = applyCoupon(baseAmount, body.coupon_code);
+    const currency = normalize(process.env.PARAX_PRICE_CURRENCY || "usd").toLowerCase();
+    const pricing = applyCoupon(baseAmount, body.coupon_code, { currency: currency });
     if (!pricing.ok) {
       return res.status(400).json({ error: pricing.error || "Invalid coupon code." });
     }
 
-    const currency = normalize(process.env.PARAX_PRICE_CURRENCY || "usd").toLowerCase();
     const title = normalize(process.env.PARAX_PRODUCT_TITLE) || "Parax Pro - Lifetime License";
     const unitAmount = Math.max(50, Math.round(Number(pricing.amount_after || 0) * 100));
     const baseUrl = getBaseUrl(req);
@@ -136,4 +136,3 @@ module.exports = async function handler(req, res) {
     });
   }
 };
-
