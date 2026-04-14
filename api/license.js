@@ -11,6 +11,8 @@ const META = {
   LICENSE_KEY: "parax_license_key",
   LICENSE_EMAIL: "parax_license_email",
   LICENSE_MAX: "parax_license_max",
+  EMAIL_SENT_AT: "parax_license_email_sent_at",
+  EMAIL_SENT_ID: "parax_license_email_sent_id",
   MACHINE_PREFIX: "parax_machine_",
   TOKEN_PREFIX: "parax_token_",
   ACTIVATED_AT_PREFIX: "parax_activated_at_"
@@ -45,8 +47,102 @@ function normalizePaymentId(value) {
   return normalizeString(value).replace(/[^\d]/g, "");
 }
 
+function getPublicBaseUrl() {
+  return (
+    process.env.SITE_BASE_URL ||
+    process.env.PUBLIC_BASE_URL ||
+    "https://www.paraxpro.com"
+  )
+    .toString()
+    .replace(/\/+$/, "");
+}
+
 function hasMercadoPagoConfigured() {
   return Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN);
+}
+
+async function sendLicenseEmail(email, licenseKey, options) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (!resendApiKey) {
+    const error = new Error("RESEND_API_KEY is not configured.");
+    error.statusCode = 500;
+    throw error;
+  }
+
+  const normalizedEmail = normalizeString(email).toLowerCase();
+  const normalizedLicense = normalizeLicenseKey(licenseKey);
+  if (!normalizedEmail) {
+    const error = new Error("Customer email is required.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!normalizedLicense) {
+    const error = new Error("License key is required.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const supportFromEmail =
+    process.env.SUPPORT_FROM_EMAIL || "Parax Pro <onboarding@resend.dev>";
+  const baseUrl = getPublicBaseUrl();
+  const activateUrl = baseUrl + "/email-sent.html";
+  const windowsDownloadUrl = baseUrl + "/downloads/ParaX%20Pro%20Installer.exe";
+  const macDownloadUrl = baseUrl + "/downloads/ParaX%20Pro%20Mac%20Installer.zip";
+
+  const headers = {
+    Authorization: "Bearer " + resendApiKey,
+    "Content-Type": "application/json"
+  };
+
+  const idempotencyKey = normalizeString(options && options.idempotencyKey);
+  if (idempotencyKey) {
+    headers["Idempotency-Key"] = idempotencyKey;
+  }
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify({
+      from: supportFromEmail,
+      to: [normalizedEmail],
+      subject: "Your Parax Pro License Key",
+      text:
+        "Thanks for purchasing Parax Pro.\n\n" +
+        "Your license key:\n" +
+        normalizedLicense +
+        "\n\n" +
+        "Download links:\n" +
+        "Windows: " + windowsDownloadUrl + "\n" +
+        "Mac: " + macDownloadUrl + "\n\n" +
+        "Use this key to activate your plugin.\n" +
+        "Activation page: " + activateUrl,
+      html:
+        "<p>Thanks for purchasing <strong>Parax Pro</strong>.</p>" +
+        "<p>Your license key:</p>" +
+        "<p style=\"font-size:20px;font-weight:700;letter-spacing:1px;\">" + normalizedLicense + "</p>" +
+        "<p><strong>Download links:</strong></p>" +
+        "<p><a href=\"" + windowsDownloadUrl + "\">Download for Windows</a><br>" +
+        "<a href=\"" + macDownloadUrl + "\">Download for Mac</a></p>" +
+        "<p>Use this key to activate your plugin.</p>" +
+        "<p><a href=\"" + activateUrl + "\">Open activation page</a></p>"
+    })
+  });
+
+  const payload = await response.json().catch(function () {
+    return {};
+  });
+
+  if (!response.ok) {
+    const message =
+      (payload && Array.isArray(payload.errors) && payload.errors[0] && payload.errors[0].message) ||
+      payload.message ||
+      "Unable to send license email.";
+    const error = new Error(message);
+    error.statusCode = 502;
+    throw error;
+  }
+
+  return normalizeString(payload && payload.id);
 }
 
 function getMercadoPagoToken() {
@@ -414,6 +510,7 @@ function buildMercadoPagoLicensePayload(payment, metadata) {
   const licenseKey = normalizeLicenseKey(metadata[META.LICENSE_KEY]) || fallbackKey;
   const email =
     normalizeString(metadata[META.LICENSE_EMAIL]) ||
+    normalizeString(metadata && metadata.payer_email) ||
     normalizeString(payment && payment.payer && payment.payer.email) ||
     null;
 
@@ -533,12 +630,42 @@ async function handleGenerateStripe(sessionId) {
     session.metadata = updatedSession.metadata || {};
   }
 
-  const payload = buildLicensePayload(session, session.metadata || {});
+  const activeMetadata = session.metadata || {};
+  const customerEmail =
+    normalizeString(activeMetadata[META.LICENSE_EMAIL]) ||
+    normalizeString(session && session.customer_email) ||
+    normalizeString(
+      session &&
+        session.customer_details &&
+        session.customer_details.email
+    );
+  const alreadySentAt = normalizeString(activeMetadata[META.EMAIL_SENT_AT]);
+  let emailDelivery = alreadySentAt ? "already_sent" : "skipped";
+
+  if (customerEmail && !alreadySentAt) {
+    try {
+      const emailId = await sendLicenseEmail(customerEmail, licenseKey, {
+        idempotencyKey: "parax-license-email-stripe-" + normalizeString(session.id)
+      });
+      const updatedSession = await updateCheckoutSessionMetadata(session.id, {
+        [META.EMAIL_SENT_AT]: new Date().toISOString(),
+        [META.EMAIL_SENT_ID]: emailId,
+        [META.LICENSE_EMAIL]: customerEmail
+      });
+      session.metadata = updatedSession.metadata || activeMetadata;
+      emailDelivery = "sent";
+    } catch (error) {
+      emailDelivery = "failed";
+    }
+  }
+
+  const payload = buildLicensePayload(session, session.metadata || activeMetadata);
   return {
     statusCode: 200,
     payload: {
       ok: true,
       reused: reused,
+      email_delivery: emailDelivery,
       license: payload
     }
   };
@@ -570,14 +697,48 @@ async function handleGenerateMercadoPago(paymentId) {
   const existingKey = normalizeLicenseKey(metadata[META.LICENSE_KEY]);
   const email =
     normalizeString(metadata[META.LICENSE_EMAIL]) ||
+    normalizeString(metadata.payer_email) ||
     normalizeString(payment && payment.payer && payment.payer.email) ||
     "";
   const licenseKey = existingKey || makeMercadoPagoLicenseKey(normalizedPaymentId);
-  const effectiveMetadata = Object.assign({}, metadata, {
+  let effectiveMetadata = Object.assign({}, metadata, {
     [META.LICENSE_KEY]: licenseKey,
     [META.LICENSE_MAX]: normalizeString(metadata[META.LICENSE_MAX]) || String(DEFAULT_MAX_ACTIVATIONS),
     [META.LICENSE_EMAIL]: email
   });
+  let emailDelivery = normalizeString(metadata[META.EMAIL_SENT_AT]) ? "already_sent" : "skipped";
+
+  const initialPatch = {};
+  if (!normalizeLicenseKey(metadata[META.LICENSE_KEY])) {
+    initialPatch[META.LICENSE_KEY] = licenseKey;
+  }
+  if (!normalizeString(metadata[META.LICENSE_MAX])) {
+    initialPatch[META.LICENSE_MAX] = String(DEFAULT_MAX_ACTIVATIONS);
+  }
+  if (email && !normalizeString(metadata[META.LICENSE_EMAIL])) {
+    initialPatch[META.LICENSE_EMAIL] = email;
+  }
+
+  if (Object.keys(initialPatch).length > 0) {
+    await updateMercadoPagoPaymentMetadata(normalizedPaymentId, initialPatch);
+    effectiveMetadata = Object.assign({}, effectiveMetadata, initialPatch);
+  }
+
+  if (email && !normalizeString(metadata[META.EMAIL_SENT_AT])) {
+    try {
+      const emailId = await sendLicenseEmail(email, licenseKey, {
+        idempotencyKey: "parax-license-email-mp-" + normalizedPaymentId
+      });
+      const emailPatch = {};
+      emailPatch[META.EMAIL_SENT_AT] = new Date().toISOString();
+      emailPatch[META.EMAIL_SENT_ID] = emailId;
+      await updateMercadoPagoPaymentMetadata(normalizedPaymentId, emailPatch);
+      effectiveMetadata = Object.assign({}, effectiveMetadata, emailPatch);
+      emailDelivery = "sent";
+    } catch (error) {
+      emailDelivery = "failed";
+    }
+  }
 
   return {
     statusCode: 200,
@@ -586,6 +747,7 @@ async function handleGenerateMercadoPago(paymentId) {
       reused: Boolean(existingKey),
       source: "mercadopago",
       payment_id: normalizedPaymentId,
+      email_delivery: emailDelivery,
       license: buildMercadoPagoLicensePayload(payment, effectiveMetadata)
     }
   };

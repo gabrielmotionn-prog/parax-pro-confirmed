@@ -11,7 +11,6 @@ const META = {
   EMAIL_SENT_AT: "parax_license_email_sent_at",
   EMAIL_SENT_ID: "parax_license_email_sent_id"
 };
-const sentEmailByPaymentId = Object.create(null);
 
 function normalize(value) {
   return String(value || "").trim();
@@ -95,6 +94,20 @@ async function getPayment(paymentId) {
   return mpRequest({
     method: "GET",
     path: "/v1/payments/" + encodeURIComponent(paymentId)
+  });
+}
+
+async function updatePaymentMetadata(paymentId, metadataPatch) {
+  const currentPayment = await getPayment(paymentId);
+  const currentMetadata = (currentPayment && currentPayment.metadata) || {};
+  const mergedMetadata = Object.assign({}, currentMetadata, metadataPatch || {});
+
+  return mpRequest({
+    method: "PUT",
+    path: "/v1/payments/" + encodeURIComponent(paymentId),
+    body: {
+      metadata: mergedMetadata
+    }
   });
 }
 
@@ -205,14 +218,15 @@ module.exports = async function handler(req, res) {
     const licenseKey = normalize(metadata[META.LICENSE_KEY]) || makeMercadoPagoLicenseKey(paymentId);
     const email =
       normalize(metadata[META.LICENSE_EMAIL]) ||
+      normalize(metadata.payer_email) ||
       normalize(payment && payment.payer && payment.payer.email);
-
-    if (sentEmailByPaymentId[paymentId]) {
+    const sentAt = normalize(metadata[META.EMAIL_SENT_AT]);
+    if (sentAt) {
       return res.status(200).json({
         received: true,
         processed: true,
         skipped: true,
-        reason: "email_already_sent_runtime"
+        reason: "email_already_sent"
       });
     }
 
@@ -220,11 +234,26 @@ module.exports = async function handler(req, res) {
       throw new Error("Payer email was not found on approved payment.");
     }
 
+    const initialPatch = {};
+    if (!normalize(metadata[META.LICENSE_KEY])) {
+      initialPatch[META.LICENSE_KEY] = licenseKey;
+    }
+    if (!normalize(metadata[META.LICENSE_MAX])) {
+      initialPatch[META.LICENSE_MAX] = String(DEFAULT_MAX_ACTIVATIONS);
+    }
+    if (!normalize(metadata[META.LICENSE_EMAIL])) {
+      initialPatch[META.LICENSE_EMAIL] = email;
+    }
+
+    if (Object.keys(initialPatch).length > 0) {
+      await updatePaymentMetadata(paymentId, initialPatch);
+    }
+
     const emailId = await sendLicenseEmail(email, licenseKey, paymentId);
-    sentEmailByPaymentId[paymentId] = {
-      id: emailId,
-      at: new Date().toISOString()
-    };
+    await updatePaymentMetadata(paymentId, {
+      [META.EMAIL_SENT_AT]: new Date().toISOString(),
+      [META.EMAIL_SENT_ID]: emailId
+    });
 
     return res.status(200).json({
       received: true,
