@@ -701,40 +701,23 @@ async function handleGenerateMercadoPago(paymentId) {
     normalizeString(payment && payment.payer && payment.payer.email) ||
     "";
   const licenseKey = existingKey || makeMercadoPagoLicenseKey(normalizedPaymentId);
-  let effectiveMetadata = Object.assign({}, metadata, {
+  const effectiveMetadata = Object.assign({}, metadata, {
     [META.LICENSE_KEY]: licenseKey,
     [META.LICENSE_MAX]: normalizeString(metadata[META.LICENSE_MAX]) || String(DEFAULT_MAX_ACTIVATIONS),
     [META.LICENSE_EMAIL]: email
   });
   let emailDelivery = normalizeString(metadata[META.EMAIL_SENT_AT]) ? "already_sent" : "skipped";
 
-  const initialPatch = {};
-  if (!normalizeLicenseKey(metadata[META.LICENSE_KEY])) {
-    initialPatch[META.LICENSE_KEY] = licenseKey;
-  }
-  if (!normalizeString(metadata[META.LICENSE_MAX])) {
-    initialPatch[META.LICENSE_MAX] = String(DEFAULT_MAX_ACTIVATIONS);
-  }
-  if (email && !normalizeString(metadata[META.LICENSE_EMAIL])) {
-    initialPatch[META.LICENSE_EMAIL] = email;
-  }
-
-  if (Object.keys(initialPatch).length > 0) {
-    await updateMercadoPagoPaymentMetadata(normalizedPaymentId, initialPatch);
-    effectiveMetadata = Object.assign({}, effectiveMetadata, initialPatch);
-  }
-
   if (email && !normalizeString(metadata[META.EMAIL_SENT_AT])) {
     try {
       const emailId = await sendLicenseEmail(email, licenseKey, {
         idempotencyKey: "parax-license-email-mp-" + normalizedPaymentId
       });
-      const emailPatch = {};
-      emailPatch[META.EMAIL_SENT_AT] = new Date().toISOString();
-      emailPatch[META.EMAIL_SENT_ID] = emailId;
-      await updateMercadoPagoPaymentMetadata(normalizedPaymentId, emailPatch);
-      effectiveMetadata = Object.assign({}, effectiveMetadata, emailPatch);
-      emailDelivery = "sent";
+      if (emailId) {
+        emailDelivery = "sent";
+      } else {
+        emailDelivery = "sent";
+      }
     } catch (error) {
       emailDelivery = "failed";
     }
