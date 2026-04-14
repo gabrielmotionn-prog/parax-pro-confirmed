@@ -15,6 +15,28 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ""));
 }
 
+function toAmount(value, fallback) {
+  const raw = Number(value);
+  if (!Number.isFinite(raw) || raw < 0) return Number(fallback) || 0;
+  return raw;
+}
+
+function roundCurrency(value) {
+  return Math.round(Number(value || 0) * 100) / 100;
+}
+
+function getStripeMinimumUnitAmount(currency) {
+  const key = "STRIPE_MIN_UNIT_AMOUNT_" + String(currency || "").toUpperCase();
+  const envValue = process.env[key];
+  if (envValue !== undefined && envValue !== null && String(envValue).trim() !== "") {
+    return Math.max(1, Math.round(toAmount(envValue, 1)));
+  }
+  if (String(currency || "").toLowerCase() === "usd") {
+    return 50;
+  }
+  return 1;
+}
+
 function getBaseUrl(req) {
   const explicit =
     normalize(process.env.SITE_BASE_URL) ||
@@ -90,7 +112,16 @@ module.exports = async function handler(req, res) {
     }
 
     const title = normalize(process.env.PARAX_PRODUCT_TITLE) || "Parax Pro - Lifetime License";
-    const unitAmount = Math.max(50, Math.round(Number(pricing.amount_after || 0) * 100));
+    const minUnitAmount = getStripeMinimumUnitAmount(currency);
+    const rawUnitAmount = Math.max(1, Math.round(Number(pricing.amount_after || 0) * 100));
+    const unitAmount = Math.max(minUnitAmount, rawUnitAmount);
+    const chargedAmount = roundCurrency(unitAmount / 100);
+    const amountBefore = roundCurrency(pricing.amount_before);
+    const chargedDiscountAmount = roundCurrency(Math.max(0, amountBefore - chargedAmount));
+    const chargedDiscountPercent = amountBefore > 0
+      ? roundCurrency((chargedDiscountAmount / amountBefore) * 100)
+      : 0;
+    const stripeMinimumApplied = unitAmount !== rawUnitAmount;
     const baseUrl = getBaseUrl(req);
 
     const checkoutSession = await stripeRequest({
@@ -107,9 +138,11 @@ module.exports = async function handler(req, res) {
         "metadata[source]": "parax-site",
         "metadata[flow]": "stripe-checkout",
         "metadata[coupon_code]": pricing.coupon_applied ? pricing.coupon_code : "",
-        "metadata[coupon_percent]": pricing.coupon_applied ? pricing.discount_percent : "",
-        "metadata[amount_before]": pricing.amount_before,
-        "metadata[discount_amount]": pricing.discount_amount,
+        "metadata[coupon_percent]": pricing.coupon_applied ? chargedDiscountPercent : "",
+        "metadata[amount_before]": amountBefore,
+        "metadata[discount_amount]": chargedDiscountAmount,
+        "metadata[amount_after]": chargedAmount,
+        "metadata[stripe_minimum_applied]": stripeMinimumApplied ? "1" : "",
         customer_email: isValidEmail(payerEmail) ? payerEmail : ""
       }
     });
@@ -123,12 +156,14 @@ module.exports = async function handler(req, res) {
       ok: true,
       checkout_url: checkoutUrl,
       session_id: checkoutSession.id || null,
-      amount: pricing.amount_after,
-      amount_before: pricing.amount_before,
-      discount_amount: pricing.discount_amount,
+      amount: chargedAmount,
+      amount_before: amountBefore,
+      discount_amount: chargedDiscountAmount,
       coupon_applied: pricing.coupon_applied,
       coupon_code: pricing.coupon_applied ? pricing.coupon_code : "",
-      discount_percent: pricing.coupon_applied ? pricing.discount_percent : 0
+      discount_percent: pricing.coupon_applied ? chargedDiscountPercent : 0,
+      amount_requested: pricing.amount_after,
+      stripe_minimum_applied: stripeMinimumApplied
     });
   } catch (error) {
     return res.status(Number(error.statusCode) || 500).json({
