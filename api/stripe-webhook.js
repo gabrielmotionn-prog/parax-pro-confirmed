@@ -245,6 +245,8 @@ async function sendLicenseEmail(email, licenseKey) {
       .toString()
       .replace(/\/+$/, "");
   const activateUrl = baseUrl + "/email-sent.html";
+  const windowsDownloadUrl = baseUrl + "/downloads/ParaX%20Pro%20Installer.exe";
+  const macDownloadUrl = baseUrl + "/downloads/ParaX%20Pro%20Mac%20Installer.zip";
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -261,12 +263,18 @@ async function sendLicenseEmail(email, licenseKey) {
         "Your license key:\n" +
         licenseKey +
         "\n\n" +
+        "Download links:\n" +
+        "Windows: " + windowsDownloadUrl + "\n" +
+        "Mac: " + macDownloadUrl + "\n\n" +
         "Activate your plugin with this key.\n" +
         "Activation page: " + activateUrl,
       html:
         "<p>Thanks for purchasing <strong>Parax Pro</strong>.</p>" +
         "<p>Your license key:</p>" +
         "<p style=\"font-size:20px;font-weight:700;letter-spacing:1px;\">" + licenseKey + "</p>" +
+        "<p><strong>Download links:</strong></p>" +
+        "<p><a href=\"" + windowsDownloadUrl + "\">Download for Windows</a><br>" +
+        "<a href=\"" + macDownloadUrl + "\">Download for Mac</a></p>" +
         "<p>Activate your plugin with this key.</p>" +
         "<p><a href=\"" + activateUrl + "\">Open activation page</a></p>"
     })
