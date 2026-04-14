@@ -151,6 +151,8 @@ async function sendLicenseEmail(email, licenseKey, paymentId) {
         "Download links:\n" +
         "Windows: " + windowsDownloadUrl + "\n" +
         "Mac: " + macDownloadUrl + "\n\n" +
+        "Mac package includes ParaX Pro.jsxbin and install instructions.\n" +
+        "Mac quick start: copy ParaX Pro.jsxbin to ScriptUI Panels, restart After Effects, then open Window > ParaX Pro.\n\n" +
         "Use this key to activate your plugin.\n" +
         "Activation page: " + activateUrl,
       html:
@@ -160,6 +162,8 @@ async function sendLicenseEmail(email, licenseKey, paymentId) {
         "<p><strong>Download links:</strong></p>" +
         "<p><a href=\"" + windowsDownloadUrl + "\">Download for Windows</a><br>" +
         "<a href=\"" + macDownloadUrl + "\">Download for Mac</a></p>" +
+        "<p><strong>Mac package:</strong> includes <code>ParaX Pro.jsxbin</code> and step-by-step install instructions.</p>" +
+        "<p><strong>Mac quick start:</strong> copy <code>ParaX Pro.jsxbin</code> to ScriptUI Panels, restart After Effects, then open Window &gt; ParaX Pro.</p>" +
         "<p>Use this key to activate your plugin.</p>" +
         "<p><a href=\"" + activateUrl + "\">Open activation page</a></p>"
     })
