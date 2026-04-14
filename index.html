@@ -2863,8 +2863,8 @@
       </div>
 
       <div class="pay-coupon">
-        <label for="paymentCoupon" data-i18n="pay.coupon_label">Coupon code</label>
-        <input id="paymentCoupon" type="text" placeholder="" autocomplete="off" spellcheck="false" maxlength="32">
+        <label for="paymentCoupon" data-i18n="pay.coupon_label">Discount coupon</label>
+        <input id="paymentCoupon" type="text" placeholder="Discount coupon" data-i18n-placeholder="pay.coupon_placeholder" autocomplete="off" spellcheck="false" maxlength="32">
       </div>
 
       <div class="pay-actions">
@@ -3288,7 +3288,8 @@
           "pay.stripe_desc": "Fast approval with international cards.",
           "pay.pix_title": "PIX",
           "pay.pix_desc": "Pay via PIX and receive your key by email after confirmation.",
-          "pay.coupon_label": "Coupon code",
+          "pay.coupon_label": "Discount coupon",
+          "pay.coupon_placeholder": "Discount coupon",
           "pay.cancel": "Cancel",
           "pay.continue": "Continue",
           "auth.close": "Close",
@@ -3425,7 +3426,8 @@
           "pay.stripe_desc": "Aprobacion rapida con tarjetas internacionales.",
           "pay.pix_title": "PIX",
           "pay.pix_desc": "Paga por PIX y recibe tu clave por correo tras la confirmacion.",
-          "pay.coupon_label": "Codigo de cupon",
+          "pay.coupon_label": "Cupon de descuento",
+          "pay.coupon_placeholder": "Cupon de descuento",
           "pay.cancel": "Cancelar",
           "pay.continue": "Continuar",
           "auth.close": "Cerrar",
@@ -3562,7 +3564,8 @@
           "pay.stripe_desc": "Aprovacao rapida com cartoes internacionais.",
           "pay.pix_title": "PIX",
           "pay.pix_desc": "Pague por PIX e receba sua chave por e-mail apos a confirmacao.",
-          "pay.coupon_label": "Codigo do cupom",
+          "pay.coupon_label": "Cupom de desconto",
+          "pay.coupon_placeholder": "Cupom de desconto",
           "pay.cancel": "Cancelar",
           "pay.continue": "Continuar",
           "auth.close": "Fechar",
@@ -3659,6 +3662,11 @@
         document.querySelectorAll("[data-i18n-alt]").forEach(function (node) {
           var key = node.getAttribute("data-i18n-alt");
           node.setAttribute("alt", getText(nextLanguage, key));
+        });
+
+        document.querySelectorAll("[data-i18n-placeholder]").forEach(function (node) {
+          var key = node.getAttribute("data-i18n-placeholder");
+          node.setAttribute("placeholder", getText(nextLanguage, key));
         });
 
         updateLanguagePicker(nextLanguage);
