@@ -3,6 +3,10 @@ const { methodNotAllowed, readJsonBody } = require("../lib/http");
 
 const STRIPE_API_BASE = "https://api.stripe.com/v1";
 const MERCADOPAGO_API_BASE = "https://api.mercadopago.com";
+const PAYPAL_API_BASE = {
+  live: "https://api-m.paypal.com",
+  sandbox: "https://api-m.sandbox.paypal.com"
+};
 const LICENSE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const DEFAULT_MAX_ACTIVATIONS = 2;
 const MAX_SESSION_SCAN_PAGES = 20;
@@ -47,6 +51,14 @@ function normalizePaymentId(value) {
   return normalizeString(value).replace(/[^\d]/g, "");
 }
 
+function normalizeLanguage(value) {
+  const lang = normalizeString(value).toLowerCase();
+  if (lang === "pt" || lang === "es" || lang === "en") {
+    return lang;
+  }
+  return "en";
+}
+
 function getPublicBaseUrl() {
   return (
     process.env.SITE_BASE_URL ||
@@ -59,6 +71,15 @@ function getPublicBaseUrl() {
 
 function hasMercadoPagoConfigured() {
   return Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN);
+}
+
+function hasPayPalConfigured() {
+  return Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET);
+}
+
+function getPayPalApiBase() {
+  const mode = normalizeAction(process.env.PAYPAL_MODE || process.env.PAYPAL_ENV || "live");
+  return mode === "sandbox" ? PAYPAL_API_BASE.sandbox : PAYPAL_API_BASE.live;
 }
 
 async function sendLicenseEmail(email, licenseKey, options) {
@@ -85,7 +106,9 @@ async function sendLicenseEmail(email, licenseKey, options) {
   const supportFromEmail =
     process.env.SUPPORT_FROM_EMAIL || "Parax Pro <onboarding@resend.dev>";
   const baseUrl = getPublicBaseUrl();
-  const activateUrl = baseUrl + "/email-sent.html";
+  const emailLanguage = normalizeLanguage(options && options.language);
+  const activateUrl =
+    baseUrl + "/email-sent.html?lang=" + encodeURIComponent(emailLanguage);
   const windowsDownloadUrl = baseUrl + "/downloads/ParaX%20Pro%20Installer.exe";
   const macDownloadUrl = baseUrl + "/downloads/ParaX%20Pro%20Mac%20Installer.zip";
 
@@ -494,6 +517,216 @@ async function updateMercadoPagoPaymentMetadata(paymentId, metadataPatch) {
   });
 }
 
+function normalizePayPalCaptureId(value) {
+  return normalizeString(value).replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+}
+
+function parsePayPalCustomId(customId) {
+  const raw = normalizeString(customId);
+  const output = {
+    email: "",
+    language: "en"
+  };
+  if (!raw) return output;
+  const parts = raw.split("|");
+  for (let i = 0; i < parts.length; i += 1) {
+    const part = parts[i];
+    if (part.indexOf("e:") === 0) {
+      try {
+        output.email = normalizeString(decodeURIComponent(part.slice(2))).toLowerCase();
+      } catch (error) {
+        output.email = normalizeString(part.slice(2)).toLowerCase();
+      }
+      continue;
+    }
+    if (part.indexOf("l:") === 0) {
+      output.language = normalizeLanguage(part.slice(2));
+    }
+  }
+  return output;
+}
+
+function extractPayPalPayerEmail(capture) {
+  return (
+    normalizeString(
+      capture &&
+        capture.payer &&
+        capture.payer.email_address
+    ).toLowerCase() ||
+    normalizeString(
+      capture &&
+        capture.payment_source &&
+        capture.payment_source.paypal &&
+        capture.payment_source.paypal.email_address
+    ).toLowerCase()
+  );
+}
+
+async function getPayPalAccessToken() {
+  if (!hasPayPalConfigured()) {
+    const error = new Error("PayPal is not configured on the server.");
+    error.statusCode = 500;
+    throw error;
+  }
+
+  const credentials = Buffer.from(
+    normalizeString(process.env.PAYPAL_CLIENT_ID) +
+      ":" +
+      normalizeString(process.env.PAYPAL_CLIENT_SECRET)
+  ).toString("base64");
+
+  const response = await fetch(getPayPalApiBase() + "/v1/oauth2/token", {
+    method: "POST",
+    headers: {
+      Authorization: "Basic " + credentials,
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json"
+    },
+    body: "grant_type=client_credentials"
+  });
+
+  const payload = await response.json().catch(function () {
+    return {};
+  });
+
+  if (!response.ok || !payload.access_token) {
+    const message =
+      normalizeString(payload && payload.error_description) ||
+      normalizeString(payload && payload.error) ||
+      "Unable to authenticate with PayPal.";
+    const error = new Error(message);
+    error.statusCode = response.status || 502;
+    throw error;
+  }
+
+  return String(payload.access_token);
+}
+
+async function paypalRequest(params) {
+  const token = normalizeString(params && params.token) || (await getPayPalAccessToken());
+  const method = normalizeString(params && params.method).toUpperCase() || "GET";
+  const path = normalizeString(params && params.path) || "/";
+  const headers = Object.assign(
+    {
+      Authorization: "Bearer " + token,
+      Accept: "application/json"
+    },
+    (params && params.headers) || {}
+  );
+
+  const fetchOptions = {
+    method: method,
+    headers: headers
+  };
+
+  if (method !== "GET" && params && params.body) {
+    headers["Content-Type"] = "application/json";
+    fetchOptions.body = JSON.stringify(params.body);
+  }
+
+  const response = await fetch(getPayPalApiBase() + path, fetchOptions);
+  const payload = await response.json().catch(function () {
+    return {};
+  });
+
+  if (!response.ok) {
+    const details =
+      payload &&
+      Array.isArray(payload.details) &&
+      payload.details[0] &&
+      payload.details[0].issue;
+    const message =
+      normalizeString(payload && payload.message) ||
+      normalizeString(details) ||
+      "PayPal request failed.";
+    const error = new Error(message);
+    error.statusCode = response.status || 502;
+    error.paypalPayload = payload;
+    throw error;
+  }
+
+  return payload;
+}
+
+async function getPayPalCapture(captureId) {
+  return paypalRequest({
+    method: "GET",
+    path: "/v2/payments/captures/" + encodeURIComponent(captureId)
+  });
+}
+
+function payPalCaptureIsCompleted(capture) {
+  return normalizeAction(capture && capture.status) === "completed";
+}
+
+function makePayPalLicenseKey(captureId) {
+  const normalizedCaptureId = normalizePayPalCaptureId(captureId);
+  if (!normalizedCaptureId) return "";
+  const signature = hmacHex("pp:" + normalizedCaptureId).slice(0, 8);
+  return "PRX-PP" + normalizedCaptureId + "-" + signature;
+}
+
+function parsePayPalLicenseKey(key) {
+  const normalized = normalizeLicenseKey(key);
+  const match = /^PRX-PP([A-Z0-9]{8,40})-([A-Z0-9]{8})$/.exec(normalized);
+  if (!match) return null;
+
+  const captureId = match[1];
+  const providedSig = match[2];
+  const expectedSig = hmacHex("pp:" + captureId).slice(0, 8);
+  if (providedSig !== expectedSig) return null;
+
+  return {
+    key: normalized,
+    captureId: captureId
+  };
+}
+
+function createPayPalActivationToken(captureId, machineId) {
+  const normalizedCaptureId = normalizePayPalCaptureId(captureId);
+  const normalizedMachineId = normalizeMachineId(machineId);
+  if (!normalizedCaptureId || !normalizedMachineId) return "";
+  const signature = hmacHex("pptok:" + normalizedCaptureId + ":" + normalizedMachineId).slice(0, 24);
+  return "prx_pptok2__" + normalizedCaptureId + "__" + signature;
+}
+
+function parsePayPalActivationToken(token) {
+  const value = normalizeToken(token);
+  const match = /^prx_pptok2__([A-Z0-9]{8,40})__([A-F0-9]{24})$/i.exec(value);
+  if (!match) return null;
+  return {
+    version: 2,
+    captureId: normalizePayPalCaptureId(match[1]),
+    signature: String(match[2] || "").toUpperCase()
+  };
+}
+
+function buildPayPalLicensePayload(capture, options) {
+  const captureId =
+    normalizePayPalCaptureId(capture && capture.id) ||
+    normalizePayPalCaptureId(options && options.captureId);
+  const custom = parsePayPalCustomId(capture && capture.custom_id);
+  const email =
+    normalizeString(options && options.email).toLowerCase() ||
+    custom.email ||
+    extractPayPalPayerEmail(capture) ||
+    null;
+  const licenseKey =
+    normalizeLicenseKey(options && options.licenseKey) ||
+    makePayPalLicenseKey(captureId);
+  const machineId = normalizeMachineId(options && options.machineId);
+  const activations = machineId ? [machineId] : [];
+
+  return {
+    license_key: licenseKey,
+    email: email || null,
+    activations: activations,
+    max_activations: DEFAULT_MAX_ACTIVATIONS,
+    remaining_activations: Math.max(DEFAULT_MAX_ACTIVATIONS - activations.length, 0),
+    session_id: captureId || null
+  };
+}
+
 function mercadoPagoPaymentIsApproved(payment) {
   return normalizeAction(payment && payment.status) === "approved";
 }
@@ -649,7 +882,8 @@ async function handleGenerateStripe(sessionId) {
   if (customerEmail && !alreadySentAt) {
     try {
       const emailId = await sendLicenseEmail(customerEmail, licenseKey, {
-        idempotencyKey: "parax-license-email-stripe-" + normalizeString(session.id)
+        idempotencyKey: "parax-license-email-stripe-" + normalizeString(session.id),
+        language: normalizeLanguage(activeMetadata.parax_lang)
       });
       const updatedSession = await updateCheckoutSessionMetadata(session.id, {
         [META.EMAIL_SENT_AT]: new Date().toISOString(),
@@ -715,7 +949,8 @@ async function handleGenerateMercadoPago(paymentId) {
   if (email && !normalizeString(metadata[META.EMAIL_SENT_AT])) {
     try {
       const emailId = await sendLicenseEmail(email, licenseKey, {
-        idempotencyKey: "parax-license-email-mp-" + normalizedPaymentId
+        idempotencyKey: "parax-license-email-mp-" + normalizedPaymentId,
+        language: normalizeLanguage(metadata.parax_lang)
       });
       if (emailId) {
         emailDelivery = "sent";
@@ -736,6 +971,63 @@ async function handleGenerateMercadoPago(paymentId) {
       payment_id: normalizedPaymentId,
       email_delivery: emailDelivery,
       license: buildMercadoPagoLicensePayload(payment, effectiveMetadata)
+    }
+  };
+}
+
+async function handleGeneratePayPal(paymentId) {
+  const captureId = normalizePayPalCaptureId(paymentId);
+  if (!captureId) {
+    return {
+      statusCode: 400,
+      payload: {
+        error: "Invalid PayPal capture id."
+      }
+    };
+  }
+
+  const capture = await getPayPalCapture(captureId);
+  if (!payPalCaptureIsCompleted(capture)) {
+    return {
+      statusCode: 402,
+      payload: {
+        error: "Payment not completed for this PayPal capture.",
+        payment_status: normalizeAction(capture && capture.status) || null
+      }
+    };
+  }
+
+  const custom = parsePayPalCustomId(capture && capture.custom_id);
+  const email = custom.email || extractPayPalPayerEmail(capture) || "";
+  const licenseKey = makePayPalLicenseKey(captureId);
+  const language = normalizeLanguage(custom.language);
+  let emailDelivery = "skipped";
+
+  if (email) {
+    try {
+      await sendLicenseEmail(email, licenseKey, {
+        idempotencyKey: "parax-license-email-paypal-" + captureId,
+        language: language
+      });
+      emailDelivery = "sent";
+    } catch (error) {
+      emailDelivery = "failed";
+    }
+  }
+
+  return {
+    statusCode: 200,
+    payload: {
+      ok: true,
+      reused: true,
+      source: "paypal",
+      payment_id: captureId,
+      email_delivery: emailDelivery,
+      license: buildPayPalLicensePayload(capture, {
+        captureId: captureId,
+        email: email,
+        licenseKey: licenseKey
+      })
     }
   };
 }
@@ -877,6 +1169,36 @@ async function handleActivate(licenseKey, machineId) {
     }
   }
 
+  // 3) PayPal-backed licenses
+  if (hasPayPalConfigured()) {
+    const parsedPaypal = parsePayPalLicenseKey(normalizedKey);
+    if (parsedPaypal) {
+      const capture = await getPayPalCapture(parsedPaypal.captureId);
+      if (!payPalCaptureIsCompleted(capture)) {
+        return { statusCode: 402, payload: { error: "Payment not completed for this license." } };
+      }
+
+      const token = createPayPalActivationToken(parsedPaypal.captureId, normalizedMachine);
+      if (!token) {
+        return { statusCode: 500, payload: { error: "Unable to create activation token." } };
+      }
+
+      return {
+        statusCode: 200,
+        payload: {
+          ok: true,
+          token: token,
+          already_activated: true,
+          license: buildPayPalLicensePayload(capture, {
+            captureId: parsedPaypal.captureId,
+            licenseKey: normalizedKey,
+            machineId: normalizedMachine
+          })
+        }
+      };
+    }
+  }
+
   return { statusCode: 404, payload: { error: "Invalid license key." } };
 }
 
@@ -979,6 +1301,45 @@ async function handleCheck(token, machineId) {
     };
   }
 
+  // PayPal tokens
+  const paypalToken = parsePayPalActivationToken(normalizedToken);
+  if (paypalToken && hasPayPalConfigured()) {
+    const expectedToken = createPayPalActivationToken(paypalToken.captureId, normalizedMachine);
+    if (!expectedToken || normalizeToken(expectedToken).toUpperCase() !== normalizeToken(normalizedToken).toUpperCase()) {
+      return {
+        statusCode: 401,
+        payload: {
+          valid: false,
+          error: "License validation failed.",
+          reason: "machine_mismatch"
+        }
+      };
+    }
+
+    const capture = await getPayPalCapture(paypalToken.captureId);
+    if (!payPalCaptureIsCompleted(capture)) {
+      return {
+        statusCode: 401,
+        payload: {
+          valid: false,
+          error: "License validation failed.",
+          reason: "payment_not_completed"
+        }
+      };
+    }
+
+    return {
+      statusCode: 200,
+      payload: {
+        valid: true,
+        license: buildPayPalLicensePayload(capture, {
+          captureId: paypalToken.captureId,
+          machineId: normalizedMachine
+        })
+      }
+    };
+  }
+
   let session = null;
   const tokenSessionId = extractSessionIdFromToken(normalizedToken);
   if (tokenSessionId) {
@@ -1061,8 +1422,17 @@ module.exports = async function handler(req, res) {
       const paymentId = normalizeString((req.query && req.query.payment_id) || body.payment_id);
 
       if (paymentId) {
-        const mpResult = await handleGenerateMercadoPago(paymentId);
-        return res.status(mpResult.statusCode).json(mpResult.payload);
+        if (/^\d+$/.test(paymentId)) {
+          const mpResult = await handleGenerateMercadoPago(paymentId);
+          return res.status(mpResult.statusCode).json(mpResult.payload);
+        }
+
+        if (hasPayPalConfigured()) {
+          const paypalResult = await handleGeneratePayPal(paymentId);
+          return res.status(paypalResult.statusCode).json(paypalResult.payload);
+        }
+
+        return res.status(400).json({ error: "Unsupported payment_id format." });
       }
 
       if (!sessionId) {

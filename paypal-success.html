@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parax Pro | PayPal Confirmation</title>
+  <meta name="description" content="Finalizing your PayPal payment and preparing your Parax Pro access key.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #05030d;
+      --panel: rgba(12, 8, 24, 0.92);
+      --line: rgba(124, 58, 237, 0.35);
+      --text: #f7f5ff;
+      --muted: #b2aacd;
+      --purple: #a855f7;
+      --blue: #2563eb;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100dvh; }
+    body {
+      font-family: "Plus Jakarta Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 14% 10%, rgba(124, 58, 237, 0.34), transparent 34%),
+        radial-gradient(circle at 90% 0%, rgba(37, 99, 235, 0.26), transparent 26%),
+        linear-gradient(180deg, #05030d, #090513);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .panel {
+      width: min(760px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: linear-gradient(180deg, var(--panel), rgba(8, 5, 15, 0.95));
+      box-shadow:
+        0 36px 95px rgba(3, 2, 10, 0.8),
+        0 0 0 1px rgba(167, 139, 250, 0.12) inset;
+      padding: clamp(24px, 4vw, 40px);
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(167, 139, 250, 0.52);
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: rgba(109, 40, 217, 0.18);
+      color: #ddd6fe;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 16px 0 10px;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.85rem, 4.5vw, 2.8rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 2.2vw, 1.1rem);
+      line-height: 1.6;
+    }
+
+    .status {
+      margin-top: 18px;
+      min-height: 28px;
+      color: #ddd6fe;
+      font-weight: 600;
+    }
+
+    .status.error {
+      color: #fecaca;
+    }
+
+    .actions {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .btn {
+      border-radius: 12px;
+      border: 1px solid rgba(167, 139, 250, 0.5);
+      background: rgba(109, 40, 217, 0.16);
+      color: #efe9ff;
+      text-decoration: none;
+      font: 700 0.92rem "Space Grotesk", sans-serif;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: 0.22s ease;
+    }
+
+    .btn:hover { border-color: rgba(167, 139, 250, 0.78); background: rgba(109, 40, 217, 0.28); }
+
+    .btn-main {
+      color: #fff;
+      border-color: rgba(167, 139, 250, 0.86);
+      background: linear-gradient(90deg, #6d28d9, #2563eb);
+      box-shadow: 0 14px 34px rgba(109, 40, 217, 0.38);
+    }
+
+    @media (max-width: 640px) {
+      .actions { grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18082773402"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'AW-18082773402');
+  </script>
+</head>
+<body>
+  <main class="panel">
+    <p class="badge" id="badgeText">PayPal confirmed</p>
+    <h1 id="titleText">Finalizing your payment...</h1>
+    <p class="subtitle" id="subtitleText">Please wait a few seconds while we prepare your Parax Pro access.</p>
+    <p class="status" id="statusText"></p>
+    <div class="actions">
+      <button class="btn btn-main" id="retryBtn" type="button">Try again</button>
+      <a class="btn" id="supportBtn" href="/support.html">Contact support</a>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var LANGUAGE_KEY = "parax_pro_lang_v1";
+      var params = new URLSearchParams(window.location.search || "");
+      var queryLanguage = String(params.get("lang") || "").trim().toLowerCase();
+      var orderId = String(params.get("token") || params.get("order_id") || "").trim();
+      var source = String(params.get("source") || "").trim().toLowerCase();
+      var statusText = document.getElementById("statusText");
+      var retryBtn = document.getElementById("retryBtn");
+
+      var texts = {
+        en: {
+          titlePage: "Parax Pro | PayPal Confirmation",
+          badge: "PayPal confirmed",
+          title: "Finalizing your payment...",
+          subtitle: "Please wait a few seconds while we prepare your Parax Pro access.",
+          retry: "Try again",
+          support: "Contact support",
+          processing: "Confirming payment and preparing your key...",
+          missingOrder: "PayPal order reference was not found.",
+          failed: "Unable to finalize your PayPal payment right now."
+        },
+        es: {
+          titlePage: "Parax Pro | Confirmacion de PayPal",
+          badge: "PayPal confirmado",
+          title: "Finalizando tu pago...",
+          subtitle: "Espera unos segundos mientras preparamos tu acceso de Parax Pro.",
+          retry: "Intentar de nuevo",
+          support: "Contactar soporte",
+          processing: "Confirmando pago y preparando tu clave...",
+          missingOrder: "No se encontro la referencia de pedido de PayPal.",
+          failed: "No se pudo finalizar tu pago de PayPal ahora."
+        },
+        pt: {
+          titlePage: "Parax Pro | Confirmacao PayPal",
+          badge: "PayPal confirmado",
+          title: "Finalizando seu pagamento...",
+          subtitle: "Aguarde alguns segundos enquanto preparamos seu acesso ao Parax Pro.",
+          retry: "Tentar novamente",
+          support: "Falar com suporte",
+          processing: "Confirmando pagamento e preparando sua chave...",
+          missingOrder: "Nao foi encontrada a referencia do pedido PayPal.",
+          failed: "Nao foi possivel finalizar seu pagamento PayPal agora."
+        }
+      };
+
+      function normalizeLanguage(value) {
+        var language = String(value || "").trim().toLowerCase();
+        if (language === "pt" || language === "es" || language === "en") return language;
+        return "";
+      }
+
+      var currentLanguage =
+        normalizeLanguage(queryLanguage) ||
+        normalizeLanguage(localStorage.getItem(LANGUAGE_KEY)) ||
+        "en";
+
+      localStorage.setItem(LANGUAGE_KEY, currentLanguage);
+      document.documentElement.lang = currentLanguage === "pt" ? "pt-BR" : currentLanguage;
+
+      function t(key) {
+        var table = texts[currentLanguage] || texts.en;
+        return table[key] || texts.en[key] || key;
+      }
+
+      function applyLanguage() {
+        document.title = t("titlePage");
+        document.getElementById("badgeText").textContent = t("badge");
+        document.getElementById("titleText").textContent = t("title");
+        document.getElementById("subtitleText").textContent = t("subtitle");
+        document.getElementById("supportBtn").textContent = t("support");
+        retryBtn.textContent = t("retry");
+      }
+
+      async function finalizePayPal() {
+        if (!orderId) {
+          statusText.className = "status error";
+          statusText.textContent = t("missingOrder");
+          return;
+        }
+
+        statusText.className = "status";
+        statusText.textContent = t("processing");
+
+        try {
+          var response = await fetch("/api/paypal", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              action: "capture_order",
+              order_id: orderId,
+              language: currentLanguage,
+              source: source || "paypal"
+            })
+          });
+
+          var payload = await response.json().catch(function () {
+            return {};
+          });
+
+          if (!response.ok || !payload.capture_id) {
+            throw new Error(payload.error || t("failed"));
+          }
+
+          var redirectLanguage = normalizeLanguage(payload.language) || currentLanguage;
+          window.location.replace(
+            "/email-sent.html?source=paypal&payment_id=" +
+            encodeURIComponent(payload.capture_id) +
+            "&lang=" +
+            encodeURIComponent(redirectLanguage)
+          );
+        } catch (error) {
+          statusText.className = "status error";
+          statusText.textContent = error.message || t("failed");
+        }
+      }
+
+      retryBtn.addEventListener("click", function () {
+        finalizePayPal();
+      });
+
+      applyLanguage();
+      finalizePayPal();
+    })();
+  </script>
+</body>
+</html>
