@@ -58,6 +58,10 @@ function getPayPalCredentials() {
   };
 }
 
+function hasEnvValue(name) {
+  return normalize(process.env[name]) !== "";
+}
+
 function getBaseUrl(req) {
   const explicit =
     normalize(process.env.SITE_BASE_URL) ||
@@ -66,6 +70,85 @@ function getBaseUrl(req) {
   const host = req.headers["x-forwarded-host"] || req.headers.host || "";
   const proto = req.headers["x-forwarded-proto"] || "https";
   return (host ? proto + "://" + host : "https://www.paraxpro.com").replace(/\/+$/, "");
+}
+
+function buildIntegrationState(req) {
+  return {
+    mode: getPayPalMode(),
+    api_base: getPayPalApiBase(),
+    base_url: req ? getBaseUrl(req) : "",
+    has_client_id: hasEnvValue("PAYPAL_CLIENT_ID"),
+    has_client_secret: hasEnvValue("PAYPAL_CLIENT_SECRET"),
+    has_webhook_id: hasEnvValue("PAYPAL_WEBHOOK_ID")
+  };
+}
+
+function extractFirstIssue(payload) {
+  return normalize(
+    payload &&
+    Array.isArray(payload.details) &&
+    payload.details[0] &&
+    payload.details[0].issue
+  );
+}
+
+function extractPayPalDebugId(response, payload) {
+  const headerDebugId =
+    response &&
+    response.headers &&
+    typeof response.headers.get === "function"
+      ? normalize(response.headers.get("paypal-debug-id"))
+      : "";
+  if (headerDebugId) return headerDebugId;
+  return normalize(payload && payload.debug_id);
+}
+
+function getFriendlyCreateOrderMessage(error) {
+  const payload = (error && error.paypalPayload) || {};
+  const message =
+    normalize(error && error.message) ||
+    normalize(payload.message) ||
+    normalize(payload.error_description) ||
+    "PayPal checkout is temporarily unavailable.";
+  return message;
+}
+
+function buildCreateOrderErrorPayload(req, error, requestId) {
+  const payload = (error && error.paypalPayload) || {};
+  return {
+    error: getFriendlyCreateOrderMessage(error),
+    integration_state: buildIntegrationState(req),
+    error_code: normalize(error && error.errorCode) || normalize(payload.name || payload.error) || null,
+    issue: normalize(error && error.issue) || extractFirstIssue(payload) || null,
+    debug_id: normalize(error && error.debugId) || normalize(payload.debug_id) || null,
+    request_id: normalize(requestId) || null
+  };
+}
+
+function logPayPalError(context, requestId, error, extra) {
+  const payload = (error && error.paypalPayload) || {};
+  const logPayload = {
+    system: "paypal",
+    context: normalize(context) || "unknown",
+    request_id: normalize(requestId) || null,
+    status_code: Number(error && error.statusCode) || null,
+    error_code: normalize(error && error.errorCode) || normalize(payload.name || payload.error) || null,
+    issue: normalize(error && error.issue) || extractFirstIssue(payload) || null,
+    debug_id: normalize(error && error.debugId) || normalize(payload.debug_id) || null,
+    message: normalize(error && error.message) || "PayPal request failed.",
+    integration_state: (extra && extra.integration_state) || null,
+    extra: extra || {},
+    paypal_payload: payload
+  };
+  console.error("[paypal:error]", JSON.stringify(logPayload));
+}
+
+function shouldTryMinimalCreateOrder(error) {
+  const statusCode = Number(error && error.statusCode) || 0;
+  if (statusCode === 400 || statusCode === 403 || statusCode === 422) {
+    return true;
+  }
+  return false;
 }
 
 function buildCustomId(options) {
@@ -171,17 +254,18 @@ async function paypalRequest(params) {
   }
 
   if (!response.ok) {
-    const issue =
-      payload &&
-      Array.isArray(payload.details) &&
-      payload.details[0] &&
-      payload.details[0].issue;
+    const issue = extractFirstIssue(payload);
+    const debugId = extractPayPalDebugId(response, payload);
+    const errorCode = normalize(payload.name || payload.error);
     const message =
       (payload && payload.message) ||
       issue ||
       "PayPal request failed.";
     const error = new Error(message);
     error.statusCode = response.status || 502;
+    error.errorCode = errorCode || null;
+    error.issue = issue || null;
+    error.debugId = debugId || null;
     error.paypalPayload = payload;
     throw error;
   }
@@ -326,49 +410,116 @@ async function handleCreateOrder(req, res, body) {
     custom_id: customId
   };
 
-  const token = await getPayPalAccessToken();
-  const order = await paypalRequest({
-    method: "POST",
-    path: "/v2/checkout/orders",
-    token: token,
-    headers: {
-      "PayPal-Request-Id": createRequestId("PARAX-ORDER")
-    },
-    body: {
-      intent: "CAPTURE",
-      purchase_units: [purchaseUnit],
-      payment_source: {
-        paypal: {
-          experience_context: {
-            brand_name: "Parax Pro",
-            shipping_preference: "NO_SHIPPING",
-            user_action: "PAY_NOW",
-            return_url: returnUrl,
-            cancel_url: cancelUrl
+  const integrationState = buildIntegrationState(req);
+  const requestId = createRequestId("PARAX-CREATE-ORDER");
+  try {
+    const token = await getPayPalAccessToken();
+
+    let order = null;
+    let orderCreationMode = "experience_context";
+    let primaryError = null;
+
+    try {
+      order = await paypalRequest({
+        method: "POST",
+        path: "/v2/checkout/orders",
+        token: token,
+        headers: {
+          "PayPal-Request-Id": createRequestId("PARAX-ORDER")
+        },
+        body: {
+          intent: "CAPTURE",
+          purchase_units: [purchaseUnit],
+          payment_source: {
+            paypal: {
+              experience_context: {
+                brand_name: "Parax Pro",
+                shipping_preference: "NO_SHIPPING",
+                user_action: "PAY_NOW",
+                return_url: returnUrl,
+                cancel_url: cancelUrl
+              }
+            }
           }
         }
+      });
+    } catch (error) {
+      primaryError = error;
+      logPayPalError("create_order_primary", requestId, error, {
+        integration_state: integrationState,
+        currency: currency,
+        amount_after: pricing.amount_after,
+        coupon_applied: pricing.coupon_applied
+      });
+
+      if (!shouldTryMinimalCreateOrder(error)) {
+        return res.status(Number(error.statusCode) || 502).json(
+          buildCreateOrderErrorPayload(req, error, requestId)
+        );
       }
     }
-  });
 
-  const approvalUrl = extractApprovalUrl(order);
-  if (!approvalUrl) {
-    return res.status(502).json({ error: "PayPal did not return an approval URL." });
+    if (!order) {
+      try {
+        order = await paypalRequest({
+          method: "POST",
+          path: "/v2/checkout/orders",
+          token: token,
+          headers: {
+            "PayPal-Request-Id": createRequestId("PARAX-ORDER-MIN")
+          },
+          body: {
+            intent: "CAPTURE",
+            purchase_units: [purchaseUnit]
+          }
+        });
+        orderCreationMode = "minimal_payload";
+      } catch (fallbackError) {
+        logPayPalError("create_order_fallback", requestId, fallbackError, {
+          integration_state: integrationState,
+          currency: currency,
+          amount_after: pricing.amount_after,
+          coupon_applied: pricing.coupon_applied,
+          had_primary_error: Boolean(primaryError)
+        });
+        return res.status(Number(fallbackError.statusCode) || 502).json(
+          buildCreateOrderErrorPayload(req, fallbackError, requestId)
+        );
+      }
+    }
+
+    const approvalUrl = extractApprovalUrl(order);
+    if (!approvalUrl) {
+      return res.status(502).json({ error: "PayPal did not return an approval URL." });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      approval_url: approvalUrl,
+      order_id: order.id || null,
+      amount: pricing.amount_after,
+      amount_before: pricing.amount_before,
+      discount_amount: pricing.discount_amount,
+      coupon_applied: pricing.coupon_applied,
+      coupon_code: pricing.coupon_applied ? pricing.coupon_code : "",
+      discount_percent: pricing.coupon_applied ? pricing.discount_percent : 0,
+      currency: currency,
+      language: checkoutLanguage,
+      integration_state: {
+        order_creation_mode: orderCreationMode
+      }
+    });
+  } catch (error) {
+    logPayPalError("create_order_preflight", requestId, error, {
+      integration_state: integrationState,
+      currency: currency,
+      amount_after: pricing.amount_after,
+      coupon_applied: pricing.coupon_applied
+    });
+    return res.status(Number(error.statusCode) || 502).json(
+      buildCreateOrderErrorPayload(req, error, requestId)
+    );
   }
-
-  return res.status(200).json({
-    ok: true,
-    approval_url: approvalUrl,
-    order_id: order.id || null,
-    amount: pricing.amount_after,
-    amount_before: pricing.amount_before,
-    discount_amount: pricing.discount_amount,
-    coupon_applied: pricing.coupon_applied,
-    coupon_code: pricing.coupon_applied ? pricing.coupon_code : "",
-    discount_percent: pricing.coupon_applied ? pricing.discount_percent : 0,
-    currency: currency,
-    language: checkoutLanguage
-  });
 }
 
 function isOrderAlreadyCaptured(payload) {
@@ -478,6 +629,9 @@ module.exports = async function handler(req, res) {
       error: "Invalid action. Use one of: create_order, capture_order."
     });
   } catch (error) {
+    logPayPalError("handler", createRequestId("PARAX-HANDLER"), error, {
+      integration_state: buildIntegrationState(req)
+    });
     return res.status(Number(error.statusCode) || 500).json({
       error: error.message || "PayPal request failed."
     });

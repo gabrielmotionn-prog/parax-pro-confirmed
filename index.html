@@ -3266,6 +3266,7 @@
           "pay.email_invalid": "Please enter a valid email address.",
           "pay.email_required_pix": "Please enter your email to continue with PIX.",
           "pay.paypal_error": "PayPal checkout is not available right now.",
+          "pay.paypal_fallback_stripe": "PayPal is unavailable right now. Redirecting you to secure card checkout.",
           "pay.coupon_label": "Discount coupon",
           "pay.coupon_placeholder": "Discount coupon",
           "pay.cancel": "Cancel",
@@ -3411,6 +3412,7 @@
           "pay.email_invalid": "Ingresa un correo valido.",
           "pay.email_required_pix": "Ingresa tu correo para continuar con PIX.",
           "pay.paypal_error": "El checkout de PayPal no esta disponible ahora.",
+          "pay.paypal_fallback_stripe": "PayPal no esta disponible ahora. Te redirigimos al pago seguro con tarjeta.",
           "pay.coupon_label": "Cupon de descuento",
           "pay.coupon_placeholder": "Cupon de descuento",
           "pay.cancel": "Cancelar",
@@ -3556,6 +3558,7 @@
           "pay.email_invalid": "Informe um e-mail valido.",
           "pay.email_required_pix": "Informe seu e-mail para continuar com PIX.",
           "pay.paypal_error": "Checkout PayPal indisponivel no momento.",
+          "pay.paypal_fallback_stripe": "PayPal indisponivel no momento. Redirecionando para checkout seguro no cartao.",
           "pay.coupon_label": "Cupom de desconto",
           "pay.coupon_placeholder": "Cupom de desconto",
           "pay.cancel": "Cancelar",
@@ -3875,6 +3878,41 @@
         }
       }
 
+      async function continueWithStripeCheckout(checkoutEmail, couponCode, checkoutLanguage) {
+        try {
+          var stripeBody = {};
+          if (checkoutEmail) {
+            stripeBody.email = checkoutEmail;
+          }
+          if (couponCode) {
+            stripeBody.coupon_code = couponCode;
+          }
+          stripeBody.language = checkoutLanguage;
+
+          var stripeResponse = await fetch(STRIPE_CHECKOUT_ENDPOINT, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(stripeBody)
+          });
+
+          var stripePayload = await stripeResponse.json().catch(function () {
+            return {};
+          });
+
+          if (!stripeResponse.ok || !stripePayload.checkout_url) {
+            throw new Error(stripePayload.error || "Stripe checkout is not available right now.");
+          }
+
+          window.location.href = stripePayload.checkout_url;
+          return;
+        } catch (error) {
+          window.location.href = STRIPE_CHECKOUT_URL;
+          return;
+        }
+      }
+
       async function continueToCheckout() {
         var couponCode = getCouponCode();
         var checkoutEmail = getCheckoutEmail();
@@ -3920,50 +3958,30 @@
             });
 
             if (!paypalResponse.ok || !paypalPayload.approval_url) {
+              if (window.console && typeof window.console.warn === "function") {
+                window.console.warn("PayPal create_order failed", {
+                  error: paypalPayload.error || null,
+                  error_code: paypalPayload.error_code || null,
+                  issue: paypalPayload.issue || null,
+                  debug_id: paypalPayload.debug_id || null,
+                  request_id: paypalPayload.request_id || null
+                });
+              }
               throw new Error(paypalPayload.error || t("pay.paypal_error"));
             }
 
             window.location.href = paypalPayload.approval_url;
             return;
           } catch (error) {
-            alert(error.message || t("pay.paypal_error"));
+            alert(t("pay.paypal_fallback_stripe"));
+            await continueWithStripeCheckout(checkoutEmail, couponCode, checkoutLanguage);
             return;
           }
         }
 
         if (selectedPaymentMethod === "stripe") {
-          try {
-            var stripeBody = {};
-            if (checkoutEmail) {
-              stripeBody.email = checkoutEmail;
-            }
-            if (couponCode) {
-              stripeBody.coupon_code = couponCode;
-            }
-            stripeBody.language = checkoutLanguage;
-
-            var stripeResponse = await fetch(STRIPE_CHECKOUT_ENDPOINT, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify(stripeBody)
-            });
-
-            var stripePayload = await stripeResponse.json().catch(function () {
-              return {};
-            });
-
-            if (!stripeResponse.ok || !stripePayload.checkout_url) {
-              throw new Error(stripePayload.error || "Stripe checkout is not available right now.");
-            }
-
-            window.location.href = stripePayload.checkout_url;
-            return;
-          } catch (error) {
-            window.location.href = STRIPE_CHECKOUT_URL;
-            return;
-          }
+          await continueWithStripeCheckout(checkoutEmail, couponCode, checkoutLanguage);
+          return;
         }
 
         if (selectedPaymentMethod === "pix" && target === MERCADOPAGO_CHECKOUT_ENDPOINT) {
