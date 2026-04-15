@@ -3720,6 +3720,7 @@
 
     (function () {
       var CHECKOUT_EMAIL_KEY = "parax_checkout_email_v1";
+      var PAYPAL_ENABLED = false;
       var buyLinks = document.querySelectorAll(".js-buy-link");
       var paymentBackdrop = document.getElementById("paymentBackdrop");
       var paymentCloseBtn = document.getElementById("paymentCloseBtn");
@@ -3727,7 +3728,15 @@
       var paymentContinueBtn = document.getElementById("paymentContinueBtn");
       var paymentEmailInput = document.getElementById("paymentEmail");
       var paymentCouponInput = document.getElementById("paymentCoupon");
-      var paymentOptions = Array.prototype.slice.call(document.querySelectorAll("[data-pay-method]"));
+      var paypalOption = document.querySelector('[data-pay-method="paypal"]');
+      if (!PAYPAL_ENABLED && paypalOption) {
+        paypalOption.style.display = "none";
+        paypalOption.setAttribute("aria-hidden", "true");
+        paypalOption.setAttribute("data-pay-disabled", "1");
+      }
+      var paymentOptions = Array.prototype.slice.call(
+        document.querySelectorAll('[data-pay-method]:not([data-pay-disabled="1"])')
+      );
       var pendingCheckoutHref = "";
       var selectedPaymentMethod = "stripe";
       var STRIPE_CHECKOUT_URL = "https://buy.stripe.com/3cI9AV4KL2Q21MP0XF2Ji02";
@@ -3799,7 +3808,7 @@
 
       function getPreferredPaymentMethodByLanguage() {
         var currentLang = getCurrentLanguage();
-        return currentLang === "pt" ? "pix" : "paypal";
+        return currentLang === "pt" ? "pix" : "stripe";
       }
 
       function setPaymentMethod(method) {
@@ -3917,6 +3926,10 @@
         var couponCode = getCouponCode();
         var checkoutEmail = getCheckoutEmail();
         var checkoutLanguage = getCurrentLanguage();
+
+        if (!PAYPAL_ENABLED && selectedPaymentMethod === "paypal") {
+          selectedPaymentMethod = getPreferredPaymentMethodByLanguage();
+        }
 
         if (checkoutEmail && !isValidEmail(checkoutEmail)) {
           alert(t("pay.email_invalid"));
