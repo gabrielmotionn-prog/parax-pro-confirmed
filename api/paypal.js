@@ -83,6 +83,61 @@ function buildIntegrationState(req) {
   };
 }
 
+function normalizeCouponCode(value) {
+  return normalize(value).toUpperCase();
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ""));
+}
+
+function buildStripeFallbackUrl() {
+  return normalize(process.env.STRIPE_CHECKOUT_URL) || "https://buy.stripe.com/3cI9AV4KL2Q21MP0XF2Ji02";
+}
+
+async function createStripeFallbackCheckout(req, options) {
+  const baseUrl = getBaseUrl(req);
+  const body = {
+    language: normalizeLanguage(options && options.language)
+  };
+  const email = normalizeEmail(options && options.email);
+  const couponCode = normalizeCouponCode(options && options.coupon_code);
+  if (isValidEmail(email)) {
+    body.email = email;
+  }
+  if (couponCode) {
+    body.coupon_code = couponCode;
+  }
+
+  try {
+    const response = await fetch(baseUrl + "/api/stripe-checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+    const payload = await response.json().catch(function () {
+      return {};
+    });
+    if (response.ok && normalize(payload.checkout_url)) {
+      return {
+        ok: true,
+        checkout_url: normalize(payload.checkout_url),
+        source: "stripe_api"
+      };
+    }
+  } catch (error) {
+    // ignore and fallback to static Stripe checkout URL
+  }
+
+  return {
+    ok: true,
+    checkout_url: buildStripeFallbackUrl(),
+    source: "stripe_static"
+  };
+}
+
 function extractFirstIssue(payload) {
   return normalize(
     payload &&
@@ -453,6 +508,20 @@ async function handleCreateOrder(req, res, body) {
       });
 
       if (!shouldTryMinimalCreateOrder(error)) {
+        const fallback = await createStripeFallbackCheckout(req, {
+          email: checkoutEmail,
+          coupon_code: body.coupon_code,
+          language: checkoutLanguage
+        });
+        if (fallback.ok && fallback.checkout_url) {
+          return res.status(200).json({
+            ok: true,
+            approval_url: fallback.checkout_url,
+            fallback_provider: "stripe",
+            fallback_source: fallback.source,
+            reason: buildCreateOrderErrorPayload(req, error, requestId)
+          });
+        }
         return res.status(Number(error.statusCode) || 502).json(
           buildCreateOrderErrorPayload(req, error, requestId)
         );
@@ -482,6 +551,20 @@ async function handleCreateOrder(req, res, body) {
           coupon_applied: pricing.coupon_applied,
           had_primary_error: Boolean(primaryError)
         });
+        const stripeFallback = await createStripeFallbackCheckout(req, {
+          email: checkoutEmail,
+          coupon_code: body.coupon_code,
+          language: checkoutLanguage
+        });
+        if (stripeFallback.ok && stripeFallback.checkout_url) {
+          return res.status(200).json({
+            ok: true,
+            approval_url: stripeFallback.checkout_url,
+            fallback_provider: "stripe",
+            fallback_source: stripeFallback.source,
+            reason: buildCreateOrderErrorPayload(req, fallbackError, requestId)
+          });
+        }
         return res.status(Number(fallbackError.statusCode) || 502).json(
           buildCreateOrderErrorPayload(req, fallbackError, requestId)
         );
@@ -516,6 +599,20 @@ async function handleCreateOrder(req, res, body) {
       amount_after: pricing.amount_after,
       coupon_applied: pricing.coupon_applied
     });
+    const fallback = await createStripeFallbackCheckout(req, {
+      email: checkoutEmail,
+      coupon_code: body.coupon_code,
+      language: checkoutLanguage
+    });
+    if (fallback.ok && fallback.checkout_url) {
+      return res.status(200).json({
+        ok: true,
+        approval_url: fallback.checkout_url,
+        fallback_provider: "stripe",
+        fallback_source: fallback.source,
+        reason: buildCreateOrderErrorPayload(req, error, requestId)
+      });
+    }
     return res.status(Number(error.statusCode) || 502).json(
       buildCreateOrderErrorPayload(req, error, requestId)
     );
