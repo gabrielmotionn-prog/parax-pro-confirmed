@@ -23,13 +23,44 @@ fail() {
   exit 1
 }
 
+find_after_effects_roots() {
+  find /Applications -maxdepth 1 -type d -name "Adobe After Effects*" 2>/dev/null | sort
+}
+
+find_app_bundle() {
+  local root="$1"
+  find "$root" -maxdepth 1 -type d -name "Adobe After Effects*.app" 2>/dev/null | sort | head -n 1
+}
+
+find_preset_effects_xml() {
+  local root="$1"
+  local app_bundle="$2"
+
+  if [ -n "$app_bundle" ] && [ -f "$app_bundle/Contents/Resources/PresetEffects.xml" ]; then
+    printf '%s\n' "$app_bundle/Contents/Resources/PresetEffects.xml"
+    return 0
+  fi
+
+  if [ -f "$root/Contents/Resources/PresetEffects.xml" ]; then
+    printf '%s\n' "$root/Contents/Resources/PresetEffects.xml"
+    return 0
+  fi
+
+  if [ -f "$root/Support Files/PresetEffects.xml" ]; then
+    printf '%s\n' "$root/Support Files/PresetEffects.xml"
+    return 0
+  fi
+
+  return 1
+}
+
 if [ "$(uname)" != "Darwin" ]; then
   fail "This installer is only for macOS."
 fi
 
-[ -f "$PANEL_SOURCE" ] || fail "Missing file: ParaX Pro.jsxbin"
-[ -f "$PSEUDO_SOURCE" ] || fail "Missing file: PU_Settings_v11.xml"
-[ -f "$HEADER_LOGO_SOURCE" ] || fail "Missing file: ParaX Pro Header Logo.png"
+[ -f "$PANEL_SOURCE" ] || fail "Missing file: Files/ParaX Pro.jsxbin"
+[ -f "$PSEUDO_SOURCE" ] || fail "Missing file: Files/PU_Settings_v11.xml"
+[ -f "$HEADER_LOGO_SOURCE" ] || fail "Missing file: Files/ParaX Pro Header Logo.png"
 
 print_line ""
 print_line "$APP_NAME $APP_VERSION - Mac Installer"
@@ -38,30 +69,30 @@ print_line ""
 print_line "Close Adobe After Effects before continuing."
 print_line ""
 
-AE_APPS=()
+AE_ROOTS=()
 while IFS= read -r path; do
-  [ -n "$path" ] && AE_APPS+=("$path")
-done < <(find /Applications -maxdepth 3 -type d -name "Adobe After Effects*.app" 2>/dev/null | sort)
+  [ -n "$path" ] && AE_ROOTS+=("$path")
+done < <(find_after_effects_roots)
 
-if [ "${#AE_APPS[@]}" -eq 0 ]; then
-  fail "No Adobe After Effects app bundle was found in /Applications."
+if [ "${#AE_ROOTS[@]}" -eq 0 ]; then
+  fail "No Adobe After Effects installation was found in /Applications."
 fi
 
 print_line "Select the Adobe After Effects version to install into:"
 print_line ""
-for i in "${!AE_APPS[@]}"; do
+for i in "${!AE_ROOTS[@]}"; do
   idx=$((i + 1))
-  print_line "  [$idx] ${AE_APPS[$i]}"
+  print_line "  [$idx] ${AE_ROOTS[$i]}"
 done
 print_line ""
 
 selection=""
 while :; do
-  read -r -p "Enter a number (1-${#AE_APPS[@]}): " selection
+  read -r -p "Enter a number (1-${#AE_ROOTS[@]}): " selection
   case "$selection" in
     ''|*[!0-9]*) print_line "Invalid selection." ;;
     *)
-      if [ "$selection" -ge 1 ] && [ "$selection" -le "${#AE_APPS[@]}" ]; then
+      if [ "$selection" -ge 1 ] && [ "$selection" -le "${#AE_ROOTS[@]}" ]; then
         break
       fi
       print_line "Invalid selection."
@@ -69,16 +100,20 @@ while :; do
   esac
 done
 
-TARGET_APP="${AE_APPS[$((selection - 1))]}"
-PANEL_DIR="$TARGET_APP/Contents/Resources/Scripts/ScriptUI Panels"
-XML_PATH="$TARGET_APP/Contents/Resources/PresetEffects.xml"
+TARGET_ROOT="${AE_ROOTS[$((selection - 1))]}"
+TARGET_APP="$(find_app_bundle "$TARGET_ROOT")"
+PANEL_DIR="$TARGET_ROOT/Scripts/ScriptUI Panels"
+XML_PATH="$(find_preset_effects_xml "$TARGET_ROOT" "$TARGET_APP" || true)"
 
-[ -d "$TARGET_APP" ] || fail "Selected installation no longer exists."
-[ -f "$XML_PATH" ] || fail "PresetEffects.xml was not found at: $XML_PATH"
+[ -d "$TARGET_ROOT" ] || fail "Selected installation no longer exists."
+[ -n "$XML_PATH" ] && [ -f "$XML_PATH" ] || fail "PresetEffects.xml was not found for: $TARGET_ROOT"
 
 print_line ""
 print_line "Selected:"
-print_line "  $TARGET_APP"
+print_line "  $TARGET_ROOT"
+if [ -n "$TARGET_APP" ]; then
+  print_line "  $TARGET_APP"
+fi
 print_line ""
 
 print_line "Administrator permission is required to install into Adobe After Effects."
@@ -100,6 +135,14 @@ set -euo pipefail
 mkdir -p "$PARAX_PANEL_DIR"
 cp "$PARAX_PANEL_SOURCE" "$PARAX_PANEL_DIR/ParaX Pro.jsxbin"
 cp "$PARAX_HEADER_LOGO_SOURCE" "$PARAX_PANEL_DIR/ParaX Pro Header Logo.png"
+
+if [ -d "$PARAX_PANEL_DIR/Files" ]; then
+  rm -f "$PARAX_PANEL_DIR/Files/ParaX Pro.jsxbin"
+  rm -f "$PARAX_PANEL_DIR/Files/ParaX Pro Header Logo.png"
+  rm -f "$PARAX_PANEL_DIR/Files/PU_Settings_v11.xml"
+  rm -f "$PARAX_PANEL_DIR/Files/README.md"
+  rmdir "$PARAX_PANEL_DIR/Files" 2>/dev/null || true
+fi
 
 if [ ! -f "${PARAX_XML_PATH}.bak" ]; then
   cp "$PARAX_XML_PATH" "${PARAX_XML_PATH}.bak"

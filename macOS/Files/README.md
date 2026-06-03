@@ -19,8 +19,8 @@ Plugin para Adobe After Effects com foco em parallax cinematografico, camera rig
 
 ## Conteudo Principal
 
-- `ParaX Pro.jsx`
-  Painel principal do plugin.
+- `ParaX Pro.jsxbin`
+  Painel principal do plugin para macOS.
 - `ParaX Pro Installer.jsx`
   Instalador manual do pseudo-effect `PU | Settings`.
 - `PU_Settings_v11.xml`
@@ -68,7 +68,7 @@ Arquivos dentro de `Mac/`:
 ### Opcao 1: instalador automatico simples
 
 1. Feche o After Effects.
-2. Execute `Mac/ParaX Pro Mac Installer.command`
+2. Execute `ParaX Pro Mac Installer.command`
 3. Escolha a versao do Adobe After Effects.
 4. Autorize com a senha de administrador.
 5. Reabra o After Effects e abra `Window > ParaX Pro`
@@ -100,15 +100,24 @@ Sem essa opcao, o instalador nao conseguira editar o `PresetEffects.xml`.
 Se voce quiser instalar manualmente:
 
 1. Feche o After Effects.
-2. Copie `ParaX Pro.jsx` para:
+2. Copie apenas estes arquivos de `Files/`:
 
-   `Adobe After Effects > Support Files > Scripts > ScriptUI Panels`
+   `ParaX Pro.jsxbin`
 
-3. Rode `ParaX Pro Installer.jsx` uma vez.
+   `ParaX Pro Header Logo.png`
+
+3. Cole os arquivos diretamente em:
+
+   `/Applications/Adobe After Effects [versao]/Scripts/ScriptUI Panels/`
+
+   Nao copie a pasta `Files` inteira.
+
 4. Reinicie o After Effects.
 5. Abra o painel em:
 
    `Window > ParaX Pro`
+
+Se aparecer `Window > Files > ParaX Pro`, remova a pasta `Files` de `ScriptUI Panels` e rode o instalador novamente.
 
 ## Observacoes
 

@@ -5,20 +5,60 @@ PANEL_SOURCE="/Library/Application Support/ParaX Pro Installer/ParaX Pro.jsxbin"
 HEADER_LOGO_SOURCE="/Library/Application Support/ParaX Pro Installer/ParaX Pro Header Logo.png"
 PSEUDO_SOURCE="/Library/Application Support/ParaX Pro Installer/PU_Settings_v11.xml"
 
-find_after_effects_apps() {
-  find /Applications -maxdepth 3 -type d -name "Adobe After Effects*.app" 2>/dev/null | sort
+find_after_effects_roots() {
+  find /Applications -maxdepth 1 -type d -name "Adobe After Effects*" 2>/dev/null | sort
 }
 
-install_into_app() {
-  local app_path="$1"
-  local panel_dir="$app_path/Contents/Resources/Scripts/ScriptUI Panels"
-  local xml_path="$app_path/Contents/Resources/PresetEffects.xml"
+find_app_bundle() {
+  local root="$1"
+  find "$root" -maxdepth 1 -type d -name "Adobe After Effects*.app" 2>/dev/null | sort | head -n 1
+}
+
+find_preset_effects_xml() {
+  local root="$1"
+  local app_bundle="$2"
+
+  if [ -n "$app_bundle" ] && [ -f "$app_bundle/Contents/Resources/PresetEffects.xml" ]; then
+    printf '%s\n' "$app_bundle/Contents/Resources/PresetEffects.xml"
+    return 0
+  fi
+
+  if [ -f "$root/Contents/Resources/PresetEffects.xml" ]; then
+    printf '%s\n' "$root/Contents/Resources/PresetEffects.xml"
+    return 0
+  fi
+
+  if [ -f "$root/Support Files/PresetEffects.xml" ]; then
+    printf '%s\n' "$root/Support Files/PresetEffects.xml"
+    return 0
+  fi
+
+  return 1
+}
+
+install_into_root() {
+  local root="$1"
+  local app_bundle
+  local panel_dir
+  local xml_path
+
+  app_bundle="$(find_app_bundle "$root")"
+  panel_dir="$root/Scripts/ScriptUI Panels"
+  xml_path="$(find_preset_effects_xml "$root" "$app_bundle" || true)"
 
   [ -f "$xml_path" ] || return 0
 
   mkdir -p "$panel_dir"
   cp "$PANEL_SOURCE" "$panel_dir/ParaX Pro.jsxbin"
   cp "$HEADER_LOGO_SOURCE" "$panel_dir/ParaX Pro Header Logo.png"
+
+  if [ -d "$panel_dir/Files" ]; then
+    rm -f "$panel_dir/Files/ParaX Pro.jsxbin"
+    rm -f "$panel_dir/Files/ParaX Pro Header Logo.png"
+    rm -f "$panel_dir/Files/PU_Settings_v11.xml"
+    rm -f "$panel_dir/Files/README.md"
+    rmdir "$panel_dir/Files" 2>/dev/null || true
+  fi
 
   if [ ! -f "$xml_path.bak" ]; then
     cp "$xml_path" "$xml_path.bak"
@@ -39,8 +79,8 @@ install_into_app() {
 
 export PARAX_PSEUDO_SOURCE="$PSEUDO_SOURCE"
 
-while IFS= read -r app_path; do
-  [ -n "$app_path" ] && install_into_app "$app_path"
-done < <(find_after_effects_apps)
+while IFS= read -r root; do
+  [ -n "$root" ] && install_into_root "$root"
+done < <(find_after_effects_roots)
 
 exit 0
