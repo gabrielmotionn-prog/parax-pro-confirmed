@@ -129,8 +129,7 @@ async function sendLicenseEmail(email, licenseKey, paymentId) {
       .toString()
       .replace(/\/+$/, "");
   const activateUrl = baseUrl + "/email-sent.html";
-  const windowsDownloadUrl = baseUrl + "/downloads/ParaX%20Pro%20Installer.exe";
-  const macDownloadUrl = baseUrl + "/downloads/ParaX%20Pro%20Mac%20Installer.zip";
+  const pluginDownloadUrl = baseUrl + "/downloads/ParaxPro.jsxbin";
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -145,28 +144,20 @@ async function sendLicenseEmail(email, licenseKey, paymentId) {
       subject: "Your Parax Pro License Key",
       text:
         "Thanks for purchasing Parax Pro.\n\n" +
-        "Your license key:\n" +
+        "Your license key for older versions:\n" +
         licenseKey +
         "\n\n" +
-        "Download links:\n" +
-        "Windows: " + windowsDownloadUrl + "\n" +
-        "Mac: " + macDownloadUrl + "\n\n" +
-        "Mac package includes ParaX Pro.jsxbin and the macOS installer.\n" +
-        "Mac quick start: run ParaX Pro Mac Installer.command, restart After Effects, enable script/network access, then open Window > ParaX Pro.\n" +
-        "Do not copy the Files folder into ScriptUI Panels.\n\n" +
-        "Use this key to activate your plugin.\n" +
+        "Download ParaX Pro for Windows and macOS: " + pluginDownloadUrl + "\n" +
+        "Copy ParaxPro.jsxbin into Scripts/ScriptUI Panels and restart After Effects.\n" +
+        "The new JSXBIN does not require an activation key.\n" +
         "Activation page: " + activateUrl,
       html:
         "<p>Thanks for purchasing <strong>Parax Pro</strong>.</p>" +
-        "<p>Your license key:</p>" +
+        "<p>Your license key for older versions:</p>" +
         "<p style=\"font-size:20px;font-weight:700;letter-spacing:1px;\">" + licenseKey + "</p>" +
-        "<p><strong>Download links:</strong></p>" +
-        "<p><a href=\"" + windowsDownloadUrl + "\">Download for Windows</a><br>" +
-        "<a href=\"" + macDownloadUrl + "\">Download for Mac</a></p>" +
-        "<p><strong>Mac package:</strong> includes <code>ParaX Pro.jsxbin</code> and the macOS installer.</p>" +
-        "<p><strong>Mac quick start:</strong> run <code>ParaX Pro Mac Installer.command</code>, restart After Effects, enable script/network access, then open Window &gt; ParaX Pro.</p>" +
-        "<p>Do not copy the <code>Files</code> folder into ScriptUI Panels.</p>" +
-        "<p>Use this key to activate your plugin.</p>" +
+        "<p><a href=\"" + pluginDownloadUrl + "\">Download ParaX Pro (.jsxbin) — Windows and macOS</a></p>" +
+        "<p>Copy <code>ParaxPro.jsxbin</code> into <strong>Scripts/ScriptUI Panels</strong> and restart After Effects.</p>" +
+        "<p>The new JSXBIN does not require an activation key.</p>" +
         "<p><a href=\"" + activateUrl + "\">Open activation page</a></p>"
     })
   });

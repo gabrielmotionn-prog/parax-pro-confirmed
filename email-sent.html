@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Parax Pro | Access Ready</title>
-  <meta name="description" content="Generate your Parax Pro access key and download the installer.">
+  <meta name="description" content="Access your purchase and download ParaX Pro.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -342,9 +342,9 @@
       <div class="content">
         <p class="badge">Access Ready</p>
         <h1 id="accessReadyTitle">Your Parax Pro access is ready</h1>
-        <p class="lead">Generate your access key to activate the plugin on your machine.</p>
-        <p class="note">Copy the key and keep it in a safe place.</p>
-        <p class="subnote">After generating the key, choose your platform to download the installer. Mac download already includes <strong>ParaX Pro.jsxbin</strong> and a quick step-by-step guide.</p>
+        <p class="lead">The new JSXBIN does not require an activation key.</p>
+        <p class="note">Keep the key only if you use an older version.</p>
+        <p class="subnote">Download the same <strong>ParaxPro.jsxbin</strong> for Windows and macOS. Copy it into <strong>Scripts/ScriptUI Panels</strong> and restart After Effects.</p>
 
         <div class="actions">
           <button id="generateKeyBtn" class="btn btn-primary" type="button">Generate Access Key</button>
@@ -354,8 +354,7 @@
           <p id="keyValue" class="key-value"></p>
           <p id="keyHint" class="key-hint">Click to generate your real license key from this purchase.</p>
           <div id="downloadActions" class="download-actions">
-            <a id="downloadWindows" class="download-btn" href="#" target="_blank" rel="noopener">Download for Windows</a>
-            <a id="downloadMac" class="download-btn" href="#" target="_blank" rel="noopener">Download for Mac</a>
+            <a id="downloadPlugin" class="download-btn" href="#" download="ParaxPro.jsxbin">Download ParaX Pro (.jsxbin)</a>
           </div>
         </div>
       </div>
@@ -364,21 +363,18 @@
   <script>
     (function () {
       const STORAGE_KEY = "paraxProLicenseKey";
-      const WINDOWS_DOWNLOAD_URL = "/downloads/ParaX%20Pro%20Installer.exe";
-      const MAC_DOWNLOAD_URL = "/downloads/ParaX%20Pro%20Mac%20Installer.zip";
+      const PLUGIN_DOWNLOAD_URL = "/downloads/ParaxPro.jsxbin";
       const generateBtn = document.getElementById("generateKeyBtn");
       const keyBox = document.getElementById("keyBox");
       const keyValue = document.getElementById("keyValue");
       const keyHint = document.getElementById("keyHint");
       const downloadActions = document.getElementById("downloadActions");
-      const downloadWindows = document.getElementById("downloadWindows");
-      const downloadMac = document.getElementById("downloadMac");
+      const downloadPlugin = document.getElementById("downloadPlugin");
       const params = new URLSearchParams(window.location.search);
       const sessionId = String(params.get("session_id") || "").trim();
       const paymentId = String(params.get("payment_id") || "").trim();
 
-      downloadWindows.href = WINDOWS_DOWNLOAD_URL;
-      downloadMac.href = MAC_DOWNLOAD_URL;
+      downloadPlugin.href = PLUGIN_DOWNLOAD_URL;
 
       function showDownloads() {
         downloadActions.classList.add("show");
