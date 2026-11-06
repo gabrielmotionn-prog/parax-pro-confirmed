@@ -129,7 +129,7 @@ async function sendLicenseEmail(email, licenseKey, paymentId) {
       .toString()
       .replace(/\/+$/, "");
   const activateUrl = baseUrl + "/email-sent.html";
-  const pluginDownloadUrl = baseUrl + "/downloads/ParaxPro.jsxbin";
+  const pluginDownloadUrl = baseUrl + "/downloads/ParaX-Pro.zip";
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -148,15 +148,15 @@ async function sendLicenseEmail(email, licenseKey, paymentId) {
         licenseKey +
         "\n\n" +
         "Download ParaX Pro for Windows and macOS: " + pluginDownloadUrl + "\n" +
-        "Copy ParaxPro.jsxbin into Scripts/ScriptUI Panels and restart After Effects.\n" +
+        "Extract the ZIP and follow the included installation guide for Windows and macOS.\n" +
         "The new JSXBIN does not require an activation key.\n" +
         "Activation page: " + activateUrl,
       html:
         "<p>Thanks for purchasing <strong>Parax Pro</strong>.</p>" +
         "<p>Your license key for older versions:</p>" +
         "<p style=\"font-size:20px;font-weight:700;letter-spacing:1px;\">" + licenseKey + "</p>" +
-        "<p><a href=\"" + pluginDownloadUrl + "\">Download ParaX Pro (.jsxbin) — Windows and macOS</a></p>" +
-        "<p>Copy <code>ParaxPro.jsxbin</code> into <strong>Scripts/ScriptUI Panels</strong> and restart After Effects.</p>" +
+        "<p><a href=\"" + pluginDownloadUrl + "\">Download ParaX Pro (.zip) — Windows and macOS</a></p>" +
+        "<p>Extract the ZIP and follow the included installation guide for Windows and macOS.</p>" +
         "<p>The new JSXBIN does not require an activation key.</p>" +
         "<p><a href=\"" + activateUrl + "\">Open activation page</a></p>"
     })

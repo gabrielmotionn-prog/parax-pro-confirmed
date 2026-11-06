@@ -344,7 +344,7 @@
         <h1 id="accessReadyTitle">Your Parax Pro access is ready</h1>
         <p class="lead">The new JSXBIN does not require an activation key.</p>
         <p class="note">Keep the key only if you use an older version.</p>
-        <p class="subnote">Download the same <strong>ParaxPro.jsxbin</strong> for Windows and macOS. Copy it into <strong>Scripts/ScriptUI Panels</strong> and restart After Effects.</p>
+        <p class="subnote">The ZIP includes <strong>ParaxPro.jsxbin</strong> and an installation guide for Windows and macOS.</p>
 
         <div class="actions">
           <button id="generateKeyBtn" class="btn btn-primary" type="button">Generate Access Key</button>
@@ -354,7 +354,7 @@
           <p id="keyValue" class="key-value"></p>
           <p id="keyHint" class="key-hint">Click to generate your real license key from this purchase.</p>
           <div id="downloadActions" class="download-actions">
-            <a id="downloadPlugin" class="download-btn" href="#" download="ParaxPro.jsxbin">Download ParaX Pro (.jsxbin)</a>
+            <a id="downloadPlugin" class="download-btn" href="#" download="ParaX-Pro.zip">Download ParaX Pro (.zip)</a>
           </div>
         </div>
       </div>
@@ -363,7 +363,7 @@
   <script>
     (function () {
       const STORAGE_KEY = "paraxProLicenseKey";
-      const PLUGIN_DOWNLOAD_URL = "/downloads/ParaxPro.jsxbin";
+      const PLUGIN_DOWNLOAD_URL = "/downloads/ParaX-Pro.zip";
       const generateBtn = document.getElementById("generateKeyBtn");
       const keyBox = document.getElementById("keyBox");
       const keyValue = document.getElementById("keyValue");
