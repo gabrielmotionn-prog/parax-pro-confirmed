@@ -3526,10 +3526,10 @@
           "compare.plugin_li4": "Mais tempo para direcao criativa e resultado cinematografico.",
           "final.badge": "ParaX Pro - Licenca vitalicia",
           "final.price_currency": "R$",
-          "final.price_value": "96",
+          "final.price_value": "48",
           "final.price_sub": "BRL - Pagamento unico",
           "final.price_old": "De R$396",
-          "final.price_save": "Economize 75%",
+          "final.price_save": "Economize R$348",
           "final.li1": "1 Click Cinema",
           "final.li2": "Smart Depth",
           "final.li3": "Auto Camera Motion",
@@ -3917,6 +3917,10 @@
           window.location.href = stripePayload.checkout_url;
           return;
         } catch (error) {
+          if (/^pt(?:-|$)/.test(String(checkoutLanguage || "").toLowerCase())) {
+            alert("Não foi possível abrir o pagamento de R$ 48. Tente novamente ou escolha Pix.");
+            return;
+          }
           window.location.href = STRIPE_CHECKOUT_URL;
           return;
         }

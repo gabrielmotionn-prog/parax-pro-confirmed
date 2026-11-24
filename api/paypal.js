@@ -1,3 +1,4 @@
+const { BRL_PRICE } = require("../lib/pricing");
 const { methodNotAllowed, readJsonBody } = require("../lib/http");
 const { applyCoupon } = require("../lib/coupon");
 
@@ -432,7 +433,7 @@ async function triggerLicenseGeneration(captureId, req) {
 
 function pickPriceBase(currency) {
   if (currency === "BRL") {
-    return Number(process.env.PARAX_PRICE_BRL || 79);
+    return BRL_PRICE;
   }
   return Number(process.env.PARAX_PRICE_USD || 19);
 }
@@ -440,7 +441,7 @@ function pickPriceBase(currency) {
 async function handleCreateOrder(req, res, body) {
   const checkoutLanguage = normalizeLanguage(body.language);
   const checkoutEmail = normalizeEmail(body.email);
-  const currency = normalizeCurrency(process.env.PARAX_PRICE_CURRENCY || "USD");
+  const currency = checkoutLanguage === "pt" ? "BRL" : normalizeCurrency(process.env.PARAX_PRICE_CURRENCY || "USD");
   const baseAmount = pickPriceBase(currency);
   const pricing = applyCoupon(baseAmount, body.coupon_code, { currency: currency.toLowerCase() });
   if (!pricing.ok) {
