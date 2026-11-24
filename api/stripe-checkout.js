@@ -1,4 +1,4 @@
-const { BRL_PRICE } = require("../lib/pricing");
+const { BRL_PRICE, USD_PRICE } = require("../lib/pricing");
 const { methodNotAllowed, readJsonBody } = require("../lib/http");
 const { applyCoupon } = require("../lib/coupon");
 
@@ -107,7 +107,7 @@ module.exports = async function handler(req, res) {
     const payerEmail = normalizeEmail(body.email);
     const language = normalize(body.language).toLowerCase();
     const currency = /^pt(?:-|$)/.test(language) ? "brl" : normalize(process.env.PARAX_PRICE_CURRENCY || "usd").toLowerCase();
-    const baseAmount = currency === "brl" ? BRL_PRICE : Number(process.env.PARAX_PRICE_USD || 19);
+    const baseAmount = currency === "brl" ? BRL_PRICE : USD_PRICE;
     const pricing = applyCoupon(baseAmount, body.coupon_code, { currency: currency });
     if (!pricing.ok) {
       return res.status(400).json({ error: pricing.error || "Invalid coupon code." });

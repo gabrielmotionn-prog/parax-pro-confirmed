@@ -1,4 +1,4 @@
-const { BRL_PRICE } = require("../lib/pricing");
+const { BRL_PRICE, USD_PRICE } = require("../lib/pricing");
 const { methodNotAllowed, readJsonBody } = require("../lib/http");
 const { applyCoupon } = require("../lib/coupon");
 
@@ -92,10 +92,6 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ""));
 }
 
-function buildStripeFallbackUrl() {
-  return normalize(process.env.STRIPE_CHECKOUT_URL) || "https://buy.stripe.com/3cI9AV4KL2Q21MP0XF2Ji02";
-}
-
 async function createStripeFallbackCheckout(req, options) {
   const baseUrl = getBaseUrl(req);
   const body = {
@@ -129,14 +125,10 @@ async function createStripeFallbackCheckout(req, options) {
       };
     }
   } catch (error) {
-    // ignore and fallback to static Stripe checkout URL
+    // Report unavailable checkout rather than charging an outdated static price.
   }
 
-  return {
-    ok: true,
-    checkout_url: buildStripeFallbackUrl(),
-    source: "stripe_static"
-  };
+  return { ok: false };
 }
 
 function extractFirstIssue(payload) {
@@ -435,7 +427,7 @@ function pickPriceBase(currency) {
   if (currency === "BRL") {
     return BRL_PRICE;
   }
-  return Number(process.env.PARAX_PRICE_USD || 19);
+  return USD_PRICE;
 }
 
 async function handleCreateOrder(req, res, body) {

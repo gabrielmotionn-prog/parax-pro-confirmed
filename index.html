@@ -2760,11 +2760,11 @@
         <div class="offer-price">
           <p class="offer-amount">
             <span class="offer-currency" data-i18n="final.price_currency">$</span>
-            <span class="offer-value" data-i18n="final.price_value">19</span>
+            <span class="offer-value" data-i18n="final.price_value">8.24</span>
           </p>
           <p class="offer-sub" data-i18n="final.price_sub">USD - One-time payment</p>
           <p class="offer-old" data-i18n="final.price_old">Was $79</p>
-          <p class="offer-save" data-i18n="final.price_save">Save 75%</p>
+          <p class="offer-save" data-i18n="final.price_save">Save $70.76</p>
         </div>
 
         <div class="offer-divider" aria-hidden="true"></div>
@@ -2797,7 +2797,7 @@
         <span class="pay-step"></span>
         <span class="pay-step"></span>
       </div>
-      <p class="pay-kicker" data-i18n="pay.kicker">Parax Pro - $19</p>
+      <p class="pay-kicker" data-i18n="pay.kicker">Parax Pro - $8.24</p>
       <h3 id="paymentTitle" data-i18n="pay.title">How would you like to pay?</h3>
       <p class="pay-subtitle" data-i18n="pay.subtitle">Select how you want to complete your purchase.</p>
 
@@ -3234,10 +3234,10 @@
           "compare.plugin_li4": "More time for creative direction and cinematic results.",
           "final.badge": "ParaX Pro - Lifetime License",
           "final.price_currency": "$",
-          "final.price_value": "19",
+          "final.price_value": "8.24",
           "final.price_sub": "USD - One-time payment",
           "final.price_old": "Was $79",
-          "final.price_save": "Save 75%",
+          "final.price_save": "Save $70.76",
           "final.li1": "1 Click Cinema",
           "final.li2": "Smart Depth",
           "final.li3": "Auto Camera Motion",
@@ -3251,7 +3251,7 @@
           "final.meta": "Instant download - Secure payment",
           "footer.text": "ParaX Pro - Premium plugin for cinematic depth in After Effects.",
           "pay.close": "Close",
-          "pay.kicker": "Parax Pro - $19",
+          "pay.kicker": "Parax Pro - $8.24",
           "pay.tag": "Secure checkout",
           "pay.title": "How would you like to pay?",
           "pay.subtitle": "Select how you want to complete your purchase.",
@@ -3380,10 +3380,10 @@
           "compare.plugin_li4": "Más tiempo para dirección creativa y resultado cinematográfico.",
           "final.badge": "ParaX Pro - Licencia de por vida",
           "final.price_currency": "$",
-          "final.price_value": "19",
+          "final.price_value": "8.24",
           "final.price_sub": "USD - Pago unico",
           "final.price_old": "Antes $79",
-          "final.price_save": "Ahorra 75%",
+          "final.price_save": "Ahorra $70.76",
           "final.li1": "1 Click Cinema",
           "final.li2": "Smart Depth",
           "final.li3": "Auto Camera Motion",
@@ -3397,7 +3397,7 @@
           "final.meta": "Descarga instantanea - Pago seguro",
           "footer.text": "ParaX Pro - Plugin premium para profundidad cinematográfica en After Effects.",
           "pay.close": "Cerrar",
-          "pay.kicker": "Parax Pro - $19",
+          "pay.kicker": "Parax Pro - $8.24",
           "pay.tag": "Checkout seguro",
           "pay.title": "Como deseas pagar?",
           "pay.subtitle": "Selecciona como quieres completar tu compra.",
@@ -3543,7 +3543,7 @@
           "final.meta": "Download instantaneo - Pagamento seguro",
           "footer.text": "ParaX Pro - Plugin premium para profundidade cinematografica no After Effects.",
           "pay.close": "Fechar",
-          "pay.kicker": "Parax Pro - $19",
+          "pay.kicker": "Parax Pro - R$48",
           "pay.tag": "Checkout seguro",
           "pay.title": "Como deseja pagar?",
           "pay.subtitle": "Selecione como voce quer finalizar sua compra.",
@@ -3739,7 +3739,6 @@
       );
       var pendingCheckoutHref = "";
       var selectedPaymentMethod = "stripe";
-      var STRIPE_CHECKOUT_URL = "https://buy.stripe.com/3cI9AV4KL2Q21MP0XF2Ji02";
       var STRIPE_CHECKOUT_ENDPOINT = "/api/stripe-checkout";
       var PAYPAL_CHECKOUT_ENDPOINT = "/api/paypal";
       // PIX now opens a direct QR code page (no payment method list).
@@ -3851,7 +3850,7 @@
         var checkoutLanguage = String(language || "en").toLowerCase();
 
         if (safeMethod === "stripe") {
-          return STRIPE_CHECKOUT_URL;
+          return STRIPE_CHECKOUT_ENDPOINT;
         }
 
         if (safeMethod === "paypal") {
@@ -3921,7 +3920,7 @@
             alert("Não foi possível abrir o pagamento de R$ 48. Tente novamente ou escolha Pix.");
             return;
           }
-          window.location.href = STRIPE_CHECKOUT_URL;
+          alert("Unable to open the US$ 8.24 checkout. Please try again.");
           return;
         }
       }
